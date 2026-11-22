@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+*/node_modules/
+venv/
+*/venv/
+.venv/
+*/.venv/
+env/
+*/env/
+
+# Python cache & artifacts
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Frontend build output
+frontend/dist/
+dist/
+
+# Uploads & temporary data
+backend-node/uploads/*
+!backend-node/uploads/.gitkeep
+backend-node/data/history.json
+
+# Environment variables & credentials
+.env
+.env.local
+.env.*.local
+*.env
+firebase-service-account.json
+*/firebase-service-account.json
+
+# Archives & binaries
+*.tar.gz
+*.zip
+model/weights/*.pth
+ai-engine-python/model/weights/*.pth
+!ai-engine-python/model/weights/.gitkeep
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

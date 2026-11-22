@@ -1,0 +1,554 @@
+{
+  "diseases": [
+    {
+      "name": "Early Blight",
+      "scientific": "Alternaria solani",
+      "crops": ["Tomato", "Potato"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply mancozeb at HALF DOSE (1g/L). Spray early morning only. Reapply after rain. Avoid direct sun exposure on treated seedlings.",
+          "mature": "Apply chlorothalonil or mancozeb at full label rate. Rotate fungicides every 2 applications to prevent resistance. Spray every 7-10 days until lesions stop expanding."
+        },
+        "organic": {
+          "seedling": "Dilute neem oil to 2.5 ml/L (half strength). Apply weekly in evening. Remove badly affected seedlings to prevent nursery-wide spread.",
+          "mature": "Neem oil 5 ml/L with liquid soap as surfactant. Compost tea foliar spray bi-weekly. Bacillus subtilis biological control as preventive."
+        },
+        "pruning": {
+          "seedling": "Gently remove only severely spotted cotyledons. Do not over-prune young plants — they need leaf area to establish. Disinfect tools between plants.",
+          "mature": "Remove all affected lower leaves. Cut 2 cm below visible lesion margin. Bag and dispose — never compost infected material. Disinfect shears between cuts with 10% bleach."
+        },
+        "watering": {
+          "seedling": "Water at soil level using drip irrigation. Keep soil moist but not waterlogged. Avoid splashing soil onto leaves. Morning watering preferred.",
+          "mature": "Morning watering only at soil level. Improve air circulation with wider spacing. Add straw mulch 3-4 inches to reduce soil splash. Avoid overhead irrigation completely."
+        }
+      }
+    },
+    {
+      "name": "Late Blight",
+      "scientific": "Phytophthora infestans",
+      "crops": ["Tomato", "Potato"],
+      "contagious": true,
+      "urgency_base": "Immediate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply metalaxyl at HALF DOSE immediately. Isolate affected seedlings. Preventive copper spray on healthy neighbours at 1g/L.",
+          "mature": "Apply metalaxyl-M + mancozeb at full rate immediately. Spray every 5-7 days during wet weather. Switch to cymoxanil after 2 applications to prevent resistance."
+        },
+        "organic": {
+          "seedling": "Copper hydroxide at half strength (1g/L). Remove and destroy all infected seedlings. Apply Trichoderma-based biocontrol to remaining plants.",
+          "mature": "Copper hydroxide 2g/L — spray entire canopy including undersides. Bordeaux mixture (1:1:10) as alternative. Destroy all infected plant material immediately."
+        },
+        "pruning": {
+          "seedling": "Remove entire infected seedlings — do not prune, destroy whole plant. Bag in sealed plastic before moving through nursery.",
+          "mature": "Remove all infected branches and 15 cm of healthy tissue beyond visible symptoms. Double-bag in sealed plastic. Burn or dispose in landfill — NEVER compost."
+        },
+        "watering": {
+          "seedling": "Reduce watering immediately. No overhead watering under any circumstances. Improve ventilation in nursery. Increase plant spacing.",
+          "mature": "Stop all overhead irrigation. Water only at soil level, early morning. Maximize air flow — remove lower canopy. Improve drainage. Consider raised beds for future plantings."
+        }
+      }
+    },
+    {
+      "name": "Northern Leaf Blight",
+      "scientific": "Exserohilum turcicum",
+      "crops": ["Corn"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply azoxystrobin at HALF DOSE at V6 stage if lesions appear early. Monitor closely for 7 days before retreating.",
+          "mature": "Apply propiconazole or azoxystrobin at full rate at tasseling. Spray upper leaves thoroughly. Single application usually sufficient unless wet weather persists."
+        },
+        "organic": {
+          "seedling": "Neem oil 3 ml/L foliar spray. Ensure adequate nitrogen nutrition to boost plant resistance. Avoid planting in fields with corn residue.",
+          "mature": "Bacillus subtilis foliar spray. Remove lower infected leaves if accessible. Maintain balanced fertility — excess nitrogen increases susceptibility."
+        },
+        "pruning": {
+          "seedling": "Remove infected lower leaves by hand. Avoid mechanical damage to stalks. Dispose of removed leaves away from field.",
+          "mature": "Remove severely infected lower leaves if disease is concentrated there. Focus on protecting ear leaf and above. Destroy crop residue after harvest."
+        },
+        "watering": {
+          "seedling": "Maintain consistent soil moisture. Avoid water stress which increases susceptibility. Morning irrigation preferred.",
+          "mature": "Continue regular irrigation schedule. Avoid overhead irrigation if possible. Ensure good field drainage. Avoid working in wet fields to reduce spore spread."
+        }
+      }
+    },
+    {
+      "name": "Apple Scab",
+      "scientific": "Venturia inaequalis",
+      "crops": ["Apple"],
+      "contagious": true,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply captan at half rate during first leaf emergence. Begin spray program at green tip stage. Reapply every 7 days during wet spring weather.",
+          "mature": "Apply myclobutanil or captan at full rate. Begin at green tip, continue through petal fall. Spray every 7-10 days. Rotate fungicide classes each season."
+        },
+        "organic": {
+          "seedling": "Sulfur spray at 3g/L beginning at green tip. Apply before rain events. Avoid sulfur in temperatures above 30°C to prevent leaf burn.",
+          "mature": "Sulfur or lime-sulfur spray pre-bloom. Neem oil post-bloom. Remove fallen leaves in autumn to reduce overwintering inoculum. Apply compost to stimulate leaf decomposition."
+        },
+        "pruning": {
+          "seedling": "Remove infected leaves promptly. Thin young trees to improve air circulation. Disinfect pruning tools.",
+          "mature": "Open canopy pruning to improve airflow and light penetration. Remove water sprouts and crossing branches. Collect and destroy all fallen infected leaves and fruit."
+        },
+        "watering": {
+          "seedling": "Water at base only. Avoid wetting foliage. Keep nursery area well-drained.",
+          "mature": "Drip irrigation only — avoid sprinklers. Morning watering to allow foliage drying. Improve soil drainage around root zone."
+        }
+      }
+    },
+    {
+      "name": "Black Rot",
+      "scientific": "Botryosphaeria obtusa",
+      "crops": ["Apple"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply captan at half rate if cankers appear on young wood. Focus on wound protection after any pruning.",
+          "mature": "Apply captan or thiophanate-methyl during early season. Target sprays from pink through second cover. Protect pruning wounds with fungicide paste."
+        },
+        "organic": {
+          "seedling": "Copper spray at half strength after pruning. Seal pruning cuts with organic wound paste. Maintain plant vigor with balanced nutrition.",
+          "mature": "Copper hydroxide spray at petal fall. Remove mummified fruit and dead wood — primary inoculum sources. Apply Trichoderma-based biocontrol to pruning wounds."
+        },
+        "pruning": {
+          "seedling": "Remove any cankered wood 15 cm below visible symptoms. Fire-sterilize pruning tools between cuts.",
+          "mature": "Remove all dead wood, cankers, and mummified fruit. Prune at least 15 cm below canker margin. Burn pruned material — do not leave in orchard. Prune during dry weather."
+        },
+        "watering": {
+          "seedling": "Moderate watering. Avoid drought stress which predisposes to infection. Good drainage essential.",
+          "mature": "Maintain consistent moisture to reduce stress. Avoid drought periods followed by heavy watering. Mulch to stabilize soil moisture."
+        }
+      }
+    },
+    {
+      "name": "Cedar Apple Rust",
+      "scientific": "Gymnosporangium juniperi-virginianae",
+      "crops": ["Apple"],
+      "contagious": true,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply myclobutanil at half rate at pink bud stage. Continue every 7 days through petal fall.",
+          "mature": "Apply myclobutanil or triadimefon from pink bud through 2nd cover spray. Most critical period is bloom through 3 weeks post-petal fall."
+        },
+        "organic": {
+          "seedling": "Sulfur spray at half rate from pink bud. Remove nearby juniper/cedar trees if possible — they are alternate hosts.",
+          "mature": "Sulfur or neem oil from pink bud stage. Remove galls from juniper/cedar within 1 mile radius if feasible. Plant resistant apple varieties."
+        },
+        "pruning": {
+          "seedling": "Remove infected leaves. Keep nursery away from juniper/cedar trees.",
+          "mature": "Remove heavily infected leaves and fruit. Cut out galls from nearby junipers in late winter before they produce spores."
+        },
+        "watering": {
+          "seedling": "Avoid overhead watering. Keep foliage dry.",
+          "mature": "Drip irrigation only. Maximize air circulation. Avoid wetting foliage during the spring infection period."
+        }
+      }
+    },
+    {
+      "name": "Grape Black Rot",
+      "scientific": "Guignardia bidwellii",
+      "crops": ["Grape"],
+      "contagious": true,
+      "urgency_base": "Immediate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply mancozeb at half rate starting at 6-inch shoot growth. Continue every 7 days during wet weather.",
+          "mature": "Apply myclobutanil or mancozeb from immediate pre-bloom through 4-5 weeks post-bloom. This is the critical infection window. Spray every 7-10 days."
+        },
+        "organic": {
+          "seedling": "Copper spray at half rate. Remove all mummified berries. Maintain open canopy.",
+          "mature": "Copper hydroxide pre-bloom, sulfur post-bloom. Remove ALL mummified berries — primary inoculum source. Compost tea as preventive spray."
+        },
+        "pruning": {
+          "seedling": "Remove infected shoots and tendrils. Train vines for good air flow.",
+          "mature": "Remove mummified berries and infected clusters immediately. Open canopy for maximum airflow and sunlight. Remove infected tendrils. Post-harvest, remove all leftover fruit."
+        },
+        "watering": {
+          "seedling": "Drip irrigation only. Keep foliage dry. Ensure good drainage.",
+          "mature": "Drip irrigation only — never overhead. Water in morning. Manage canopy to maximize drying. Good weed management under vines."
+        }
+      }
+    },
+    {
+      "name": "Grape Esca",
+      "scientific": "Phaeomoniella chlamydospora",
+      "crops": ["Grape"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "No effective chemical treatment for young vines. Focus on prevention — use clean planting material from reputable nurseries.",
+          "mature": "No curative fungicides available. Trichoderma-based trunk applications may slow progression. Sodium arsenite banned in most regions."
+        },
+        "organic": {
+          "seedling": "Dip pruning wounds in Trichoderma suspension. Use only certified disease-free nursery stock.",
+          "mature": "Apply Trichoderma harzianum to pruning wounds immediately after cutting. Hot water treatment of dormant cuttings (50°C for 30 min) for new plantings."
+        },
+        "pruning": {
+          "seedling": "Prune only in dry weather. Apply wound sealant to all cuts. Use clean, sterilized tools.",
+          "mature": "Late pruning (delayed until after bud swell) reduces infection risk. Make clean cuts. Apply wound protectant paste immediately. Remove dead spurs and cordons."
+        },
+        "watering": {
+          "seedling": "Avoid water stress. Consistent irrigation supports vine vigor against trunk diseases.",
+          "mature": "Maintain consistent soil moisture — stress exacerbates esca symptoms. Avoid drought-wet cycles. Mulch to stabilize moisture."
+        }
+      }
+    },
+    {
+      "name": "Powdery Mildew",
+      "scientific": "Podosphaera clandestina",
+      "crops": ["Cherry", "Squash"],
+      "contagious": true,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply myclobutanil at HALF DOSE when white patches first appear. Avoid wetting foliage — this disease thrives in dry conditions with high humidity.",
+          "mature": "Apply sulfur or myclobutanil at full rate. Begin at first sign of white powdery growth. Spray every 7-14 days. Alternate chemistries to avoid resistance."
+        },
+        "organic": {
+          "seedling": "Potassium bicarbonate 3g/L spray. Milk spray (1:9 ratio with water) is surprisingly effective. Apply in morning.",
+          "mature": "Neem oil 5 ml/L or potassium bicarbonate 5g/L. Sulfur dust on dry days. Baking soda 1 tbsp/gallon + liquid soap. Weekly applications."
+        },
+        "pruning": {
+          "seedling": "Remove infected leaves promptly. Increase spacing for airflow.",
+          "mature": "Open canopy pruning for air circulation. Remove infected shoots and leaves. Destroy — do not compost. Thin fruit clusters if overcrowded."
+        },
+        "watering": {
+          "seedling": "Water at soil level. Good air circulation is more important than reducing humidity for this disease.",
+          "mature": "Overhead watering can actually help wash spores off leaves (unlike most diseases). But drip is still preferred. Improve air movement through canopy."
+        }
+      }
+    },
+    {
+      "name": "Bacterial Spot (Pepper)",
+      "scientific": "Xanthomonas campestris pv. vesicatoria",
+      "crops": ["Pepper"],
+      "contagious": true,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Copper hydroxide at HALF DOSE + mancozeb. Apply preventively before symptoms appear in transplants. Weekly applications.",
+          "mature": "Copper hydroxide + mancozeb tank mix at full rate. Spray every 5-7 days during wet weather. Copper alone loses effectiveness — always combine."
+        },
+        "organic": {
+          "seedling": "Copper spray at reduced rate. Avoid overhead watering. Remove severely infected seedlings from greenhouse.",
+          "mature": "Copper-based organic spray. Acibenzolar-S-methyl as systemic resistance inducer. Remove infected plants if disease is severe. Rotate fields."
+        },
+        "pruning": {
+          "seedling": "Remove infected seedlings entirely. Do not prune — it spreads bacteria through wounds. Isolate healthy plants.",
+          "mature": "Avoid pruning or handling wet plants — bacteria spread through wounds and splashing water. Remove severely infected plants entirely."
+        },
+        "watering": {
+          "seedling": "Drip irrigation only. No overhead watering. Reduce leaf wetness duration. Water early morning.",
+          "mature": "Drip irrigation exclusively. Avoid working in fields when plants are wet. Reduce plant density for better air circulation."
+        }
+      }
+    },
+    {
+      "name": "Bacterial Spot (Tomato)",
+      "scientific": "Xanthomonas vesicatoria",
+      "crops": ["Tomato"],
+      "contagious": true,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Copper hydroxide at half rate + mancozeb. Begin applications preventively in transplant greenhouse. Hot water seed treatment (50°C, 25 min).",
+          "mature": "Copper hydroxide + mancozeb at full rate every 5-7 days. Most effective when started preventively. Actigard (acibenzolar-S-methyl) as resistance inducer."
+        },
+        "organic": {
+          "seedling": "Copper-based organic fungicide at reduced rate. Hot water seed treatment. Use disease-free transplants.",
+          "mature": "Copper spray + Bacillus subtilis biocontrol. Serenade (B. subtilis) biofungicide. Rotate out of solanaceous crops for 2 years."
+        },
+        "pruning": {
+          "seedling": "Remove entire infected seedlings. Do not prune — bacterial spread through wounds.",
+          "mature": "Remove severely infected lower leaves when dry. Avoid handling wet plants. Destroy removed material. Stake plants for better airflow."
+        },
+        "watering": {
+          "seedling": "Bottom watering only. Keep foliage completely dry. Good greenhouse ventilation.",
+          "mature": "Drip irrigation only. No overhead irrigation. Water in morning. Staking and mulching reduce splash from soil."
+        }
+      }
+    },
+    {
+      "name": "Leaf Mold",
+      "scientific": "Passalora fulva",
+      "crops": ["Tomato"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply chlorothalonil at half rate if growing in greenhouse. Increase ventilation immediately.",
+          "mature": "Apply chlorothalonil or mancozeb at full rate. Most important in greenhouse/high tunnel production. Spray every 7-10 days."
+        },
+        "organic": {
+          "seedling": "Improve ventilation — this is the most effective treatment. Neem oil 2.5 ml/L. Reduce humidity below 85%.",
+          "mature": "Increase ventilation and air circulation. Neem oil 5 ml/L. Sulfur spray. Reduce humidity — open vents, use fans. Remove lower leaves."
+        },
+        "pruning": {
+          "seedling": "Thin seedlings to improve airflow. Remove any leaves with olive-green fuzzy growth on underside.",
+          "mature": "Remove infected lower leaves. Open canopy for maximum airflow. Remove suckers. Bag and destroy infected material."
+        },
+        "watering": {
+          "seedling": "Water at soil level only. Reduce humidity. Increase ventilation. Morning watering.",
+          "mature": "Drip irrigation only. Keep relative humidity below 85%. Use fans in greenhouses. Avoid creating microclimates of still, humid air."
+        }
+      }
+    },
+    {
+      "name": "Septoria Leaf Spot",
+      "scientific": "Septoria lycopersici",
+      "crops": ["Tomato"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply mancozeb or chlorothalonil at half rate when first spots appear on lower leaves.",
+          "mature": "Apply chlorothalonil, mancozeb, or copper fungicide at full rate. Spray every 7-10 days. Begin when first spots appear on lower leaves."
+        },
+        "organic": {
+          "seedling": "Copper spray at half rate. Remove affected lower leaves. Mulch to prevent soil splash.",
+          "mature": "Copper-based fungicide. Neem oil spray. Bacillus subtilis biocontrol. Aggressive lower leaf removal. 3-4 inch mulch layer."
+        },
+        "pruning": {
+          "seedling": "Remove lowest leaves touching or near soil. These are first infected via rain splash.",
+          "mature": "Remove all leaves below the first fruit cluster. Remove spotted leaves progressively. Bag and dispose. Stake or cage plants for elevation."
+        },
+        "watering": {
+          "seedling": "Water at soil level. Mulch immediately around seedlings. Morning watering only.",
+          "mature": "Drip irrigation only. Heavy mulch layer (3-4 inches) to prevent soil splash — the primary infection route. Never overhead water."
+        }
+      }
+    },
+    {
+      "name": "Spider Mites",
+      "scientific": "Tetranychus urticae",
+      "crops": ["Tomato"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply abamectin at HALF DOSE. Target leaf undersides. Avoid broad-spectrum insecticides that kill beneficial predators.",
+          "mature": "Apply abamectin or bifenazate at full rate. Thorough coverage of leaf undersides essential. Rotate miticides. Avoid pyrethroids — they worsen mite outbreaks."
+        },
+        "organic": {
+          "seedling": "Strong water spray to dislodge mites. Neem oil 2.5 ml/L targeting undersides. Release predatory mites (Phytoseiulus persimilis).",
+          "mature": "Neem oil 5 ml/L + insecticidal soap. Release predatory mites. Strong water blast to knock mites off. Repeat every 3-5 days until controlled."
+        },
+        "pruning": {
+          "seedling": "Remove severely infested leaves. Check transplants before introducing to garden.",
+          "mature": "Remove heavily infested lower leaves. Destroy — do not compost. Keep area weed-free as weeds harbor mites."
+        },
+        "watering": {
+          "seedling": "Mites thrive in dry, dusty conditions. Maintain adequate moisture. Light misting can deter mites.",
+          "mature": "Overhead misting can suppress mites (exception to the usual rule). Maintain soil moisture — water stress dramatically increases mite populations. Reduce dust."
+        }
+      }
+    },
+    {
+      "name": "Target Spot",
+      "scientific": "Corynespora cassiicola",
+      "crops": ["Tomato"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply chlorothalonil at half rate when concentric ring spots appear. Begin preventive sprays in warm, humid conditions.",
+          "mature": "Apply chlorothalonil or boscalid + pyraclostrobin at full rate. Spray every 7-10 days. Most severe in warm, humid weather."
+        },
+        "organic": {
+          "seedling": "Copper-based spray at half rate. Remove infected leaves. Improve air circulation.",
+          "mature": "Copper hydroxide spray. Neem oil. Remove all infected lower leaves. Increase spacing. Destroy crop debris after season."
+        },
+        "pruning": {
+          "seedling": "Remove spotted leaves immediately. Thin for airflow.",
+          "mature": "Aggressive lower leaf removal. Remove all spotted leaves. Open canopy. Stake or trellis plants for maximum air circulation."
+        },
+        "watering": {
+          "seedling": "Water at base. Keep foliage dry. Morning watering only.",
+          "mature": "Drip irrigation exclusively. Mulch heavily. Avoid any overhead watering. Improve field drainage."
+        }
+      }
+    },
+    {
+      "name": "Yellow Leaf Curl Virus",
+      "scientific": "Tomato yellow leaf curl virus (TYLCV)",
+      "crops": ["Tomato"],
+      "contagious": true,
+      "urgency_base": "Immediate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply imidacloprid drench to control whitefly vectors. Use reflective mulch to repel whiteflies. Screen greenhouse openings.",
+          "mature": "No cure for virus — manage whitefly vectors with systemic insecticides (imidacloprid, thiamethoxam). Rotate insecticide classes."
+        },
+        "organic": {
+          "seedling": "Yellow sticky traps for whiteflies. Neem oil spray. Reflective silver mulch deters whiteflies. Fine mesh insect netting.",
+          "mature": "Release Encarsia formosa parasitoid wasps. Neem oil for whitefly management. Yellow sticky traps. Remove infected plants promptly."
+        },
+        "pruning": {
+          "seedling": "Remove and destroy ALL infected seedlings immediately — there is no cure. Bag before moving through nursery.",
+          "mature": "Remove infected plants entirely and destroy. No amount of pruning will save an infected plant. Focus on protecting uninfected plants."
+        },
+        "watering": {
+          "seedling": "Normal watering. Focus on vector (whitefly) management, not cultural practices.",
+          "mature": "Normal watering schedule. The virus is vector-transmitted (whiteflies), not water/splash-transmitted. Healthy plants resist virus better."
+        }
+      }
+    },
+    {
+      "name": "Tomato Mosaic Virus",
+      "scientific": "Tomato mosaic virus (ToMV)",
+      "crops": ["Tomato"],
+      "contagious": true,
+      "urgency_base": "Immediate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "No chemical cure. Disinfect all tools and hands with 10% bleach or milk solution. Remove infected plants.",
+          "mature": "No chemical cure available. Prevent mechanical spread: disinfect tools, wash hands, avoid handling wet plants. Remove and destroy infected plants."
+        },
+        "organic": {
+          "seedling": "Dip hands in milk before handling plants (inactivates virus). Remove infected seedlings. Use certified virus-free seed.",
+          "mature": "Milk dip for hands and tools. Cross-protection with mild virus strains in some regions. Resistant varieties are the best solution."
+        },
+        "pruning": {
+          "seedling": "Remove and destroy infected plants immediately. NEVER prune — the virus spreads through sap on tools and hands.",
+          "mature": "Remove entire infected plants. If you must work near infected plants, change gloves between each plant. Disinfect tools with 10% bleach between cuts."
+        },
+        "watering": {
+          "seedling": "Normal watering. Virus is NOT water-transmitted — it spreads through direct contact and sap.",
+          "mature": "Normal watering. Focus on hygiene: hand washing, tool disinfection, avoiding tobacco products near plants (TMV persists in cured tobacco)."
+        }
+      }
+    },
+    {
+      "name": "Leaf Rust",
+      "scientific": "Puccinia triticina",
+      "crops": ["Wheat"],
+      "contagious": true,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply propiconazole at half rate if pustules appear on young tillers. Early-season rust can significantly reduce stand.",
+          "mature": "Apply propiconazole or tebuconazole at full rate when pustules appear on flag leaf or second leaf. Single well-timed spray usually sufficient."
+        },
+        "organic": {
+          "seedling": "Sulfur spray at half rate. Plant resistant varieties — this is the most effective organic strategy. Remove volunteer wheat nearby.",
+          "mature": "Limited organic options for cereal rust. Sulfur spray. Focus on resistant varieties for future planting. Destroy crop residue after harvest."
+        },
+        "pruning": {
+          "seedling": "Not applicable for wheat — focus on chemical/cultural controls.",
+          "mature": "Not applicable. Destroy all crop residue and volunteer wheat after harvest to reduce overwintering inoculum."
+        },
+        "watering": {
+          "seedling": "Maintain adequate moisture for healthy growth. Avoid drought stress which reduces natural resistance.",
+          "mature": "Continue normal irrigation. Avoid late-season excess moisture which extends the green leaf period and rust development."
+        }
+      }
+    },
+    {
+      "name": "Bacterial Leaf Blight",
+      "scientific": "Xanthomonas oryzae pv. oryzae",
+      "crops": ["Rice"],
+      "contagious": true,
+      "urgency_base": "Immediate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Apply copper hydroxide at half rate. Drain nursery fields. Use seed treatment with streptomycin sulfate before planting.",
+          "mature": "Limited chemical options. Copper-based bactericides provide partial control. Avoid excess nitrogen which increases susceptibility. No antibiotics registered in many regions."
+        },
+        "organic": {
+          "seedling": "Copper-based spray. Use resistant varieties. Seed treatment with hot water (52°C for 30 min). Balanced nutrition.",
+          "mature": "Copper hydroxide spray. Reduce nitrogen rates by 25%. Drain and re-flood fields to reduce bacterial load. Resistant varieties are the primary control."
+        },
+        "pruning": {
+          "seedling": "Remove infected seedlings from nursery. Clip leaf tips before transplanting to reduce infection sites.",
+          "mature": "Remove severely infected tillers if feasible. Avoid unnecessary field traffic when leaves are wet. Remove ratoon crops promptly after harvest."
+        },
+        "watering": {
+          "seedling": "Intermittent irrigation in nursery — avoid continuous flooding. Drain for 2-3 days if disease appears.",
+          "mature": "Drain fields for 3-5 days at mid-tillering if disease is severe. Reduce water depth. Intermittent irrigation reduces bacterial spread. Avoid deep flooding."
+        }
+      }
+    },
+    {
+      "name": "Healthy",
+      "scientific": "No pathogen detected",
+      "crops": ["Tomato", "Potato", "Corn", "Apple", "Grape", "Rice", "Wheat", "Pepper", "Cherry", "Soybean", "Strawberry", "Peach", "Orange", "Squash", "Blueberry", "Raspberry"],
+      "contagious": false,
+      "urgency_base": "Monitor Only",
+      "cure": {
+        "pesticide": {
+          "seedling": "No treatment needed. Continue routine preventive spray schedule if in disease-prone region. Monitor weekly for early symptoms.",
+          "mature": "No treatment needed. Maintain standard IPM preventive spray program. Scout weekly for any emerging issues."
+        },
+        "organic": {
+          "seedling": "Routine compost tea foliar spray for general plant health. Maintain balanced organic nutrition. Continue monitoring.",
+          "mature": "Continue routine organic maintenance: compost tea, beneficial insect habitat, crop rotation planning. This leaf is healthy — celebrate good management."
+        },
+        "pruning": {
+          "seedling": "Standard nursery maintenance only. No disease-related pruning needed.",
+          "mature": "Standard seasonal pruning for shape and airflow. No disease-related pruning needed. Continue good hygiene practices."
+        },
+        "watering": {
+          "seedling": "Maintain current watering schedule — plant is thriving. Consistent moisture promotes healthy growth.",
+          "mature": "Maintain current irrigation program. Healthy leaf tissue indicates good cultural practices. Continue monitoring."
+        }
+      }
+    },
+    {
+      "name": "Common Rust",
+      "scientific": "Puccinia sorghi",
+      "crops": ["Corn"],
+      "contagious": true,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Monitor — rarely severe enough to warrant treatment in seedlings. Apply mancozeb at half rate only if pustules are dense.",
+          "mature": "Apply azoxystrobin + propiconazole at full rate if pustules reach mid-canopy before tasseling. Usually a single application is sufficient."
+        },
+        "organic": {
+          "seedling": "Sulfur spray at half rate. Plant resistant hybrids. Ensure adequate nutrition.",
+          "mature": "Sulfur spray. Focus on resistant varieties for future seasons. Adequate potassium reduces severity. Destroy crop residue."
+        },
+        "pruning": {
+          "seedling": "Remove lower infected leaves if accessible. Monitor progression.",
+          "mature": "Not practical in corn. Focus on resistant hybrids and chemical control if severe. Destroy crop residue after harvest."
+        },
+        "watering": {
+          "seedling": "Normal irrigation. Rust is airborne — not water-transmitted.",
+          "mature": "Normal irrigation schedule. Rust severity is primarily driven by weather (cool, humid nights with moderate days) rather than irrigation practices."
+        }
+      }
+    },
+    {
+      "name": "Cercospora Leaf Spot",
+      "scientific": "Cercospora zeae-maydis",
+      "crops": ["Corn"],
+      "contagious": false,
+      "urgency_base": "Moderate Action",
+      "cure": {
+        "pesticide": {
+          "seedling": "Rarely affects seedlings. If spots appear, apply azoxystrobin at half rate. Rotate out of continuous corn.",
+          "mature": "Apply pyraclostrobin + metconazole between VT and R2 (tasseling to blister). Most effective as preventive before severe infection."
+        },
+        "organic": {
+          "seedling": "Rotate away from corn-on-corn. Tillage to bury infected residue. Resistant hybrids.",
+          "mature": "Crop rotation is the most effective organic control. Tillage to bury residue. Avoid corn-on-corn. Resistant hybrids."
+        },
+        "pruning": {
+          "seedling": "Remove infected lower leaves. Improve field drainage.",
+          "mature": "Not practical in corn. Focus on rotation and resistant hybrids. Destroy crop residue thoroughly."
+        },
+        "watering": {
+          "seedling": "Avoid overhead irrigation. Good drainage essential.",
+          "mature": "Avoid overhead irrigation if possible. Disease favors prolonged leaf wetness and high humidity. Improve field air circulation."
+        }
+      }
+    }
+  ]
+}
