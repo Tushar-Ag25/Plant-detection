@@ -1,7 +1,46 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Upload, ScanLine, Sprout, History, ArrowRight, ArrowUpRight, Leaf, Camera, X, Trash2, Search, Download, RotateCcw, ShieldAlert, CheckCircle2, AlertTriangle, FlaskConical, Scissors, Droplets, ChevronDown, Github, Chrome, Lock, CalendarDays } from "lucide-react";
+import {
+  Upload,
+  ScanLine,
+  Sprout,
+  History,
+  ArrowRight,
+  ArrowUpRight,
+  Leaf,
+  Camera,
+  X,
+  Trash2,
+  Search,
+  Download,
+  RotateCcw,
+  ShieldAlert,
+  CheckCircle2,
+  AlertTriangle,
+  FlaskConical,
+  Scissors,
+  Droplets,
+  ChevronDown,
+  Lock,
+  LogOut,
+  CalendarDays,
+  User as UserIcon,
+  Flame,
+  Bug,
+  Info,
+  Clock,
+  ExternalLink
+} from "lucide-react";
 import { useAuth } from "./context/AuthContext.jsx";
 import api, { setTokenProvider } from "./services/api.js";
+import {
+  saveUserScan,
+  getUserScans,
+  deleteUserScan
+} from "./services/firestoreService.js";
+import AuthModal from "./components/AuthModal.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import LeafStage3D from "./components/LeafStage3D.jsx";
+import Intro3DPreloader from "./components/Intro3DPreloader.jsx";
 
 const monogramUrl = '/assets/449677f1a9ee15da-image_20261122_185002.webp';
 const heroUrl = '/assets/57b82f0761bbaa6e-image_20261122_185002_1.webp';
@@ -9,502 +48,1248 @@ const heroLeafUrl = '/assets/767e25ed6dbe382e-image_20261122_190128.webp';
 const monographUrl = '/assets/3acd8e98dd5fd5b6-image_20261122_184954.webp';
 const loaderUrl = '/assets/02790935305e5c59-image_20261122_184957.webp';
 
-/* ---------- Data ---------- */
-const CROPS = ["Tomato","Potato","Corn","Apple","Grape","Rice","Wheat","Pepper"];
-const STAGES = ["Seedling","Vegetative","Flowering","Mature"];
+/* ---------- Crops & Stages ---------- */
+const CROPS = ["Tomato", "Potato", "Corn", "Apple", "Grape", "Rice", "Wheat", "Pepper"];
+const STAGES = ["Seedling", "Vegetative", "Flowering", "Mature"];
+
+/* ---------- Rich Sample Leaves for Interactive Preview ---------- */
+const SAMPLE_LEAVES = [
+  {
+    id: "sample-tomato",
+    crop: "Tomato",
+    condition: "Early Blight",
+    scientific: "Alternaria solani",
+    severity: "Moderate Action",
+    severityType: "warning", // 'warning' | 'urgent' | 'healthy'
+    badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+    symptomSummary: "Concentric brown bullseye lesions starting on lowest mature foliage with surrounding chlorotic halo.",
+    cureLine: "Prune bottom 30cm of leaves, apply copper hydroxide spray, and mulch soil bed.",
+    futureAlert: {
+      title: "High Spore Dispersion Warning",
+      text: "Warm temperatures (24–29°C) combined with morning dew will cause rapid upward spread within 72 hours. Isolate plot irrigation immediately.",
+      riskLevel: "High Risk within 48–72h"
+    },
+    curePlan: {
+      immediate: "Sterilize pruning shears with 70% alcohol and clip all symptomatic leaves touching the soil.",
+      organic: "Spray cold-pressed neem oil (5 ml/L) mixed with potassium bicarbonate every 5 days in early morning.",
+      targeted: "Apply chlorothalonil or copper fungicide spray at the first sign of secondary spots on mid-tier stems.",
+      soil: "Lay clean straw mulch around stems to halt soil splashback, and switch entirely to drip irrigation."
+    }
+  },
+  {
+    id: "sample-potato",
+    crop: "Potato",
+    condition: "Late Blight",
+    scientific: "Phytophthora infestans",
+    severity: "Immediate Action Needed",
+    severityType: "urgent",
+    badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
+    symptomSummary: "Dark water-soaked lesions with white powdery sporulation visible on the leaf underside under moist conditions.",
+    cureLine: "Immediately isolate infected plants, cease all overhead watering, and apply targeted metalaxyl-M.",
+    futureAlert: {
+      title: "Severe Tubercular Epidemic Alert",
+      text: "Late blight zoospores travel rapidly via wind and water splashes. Without immediate copper intervention, 90% of adjacent rows can perish within 5 days.",
+      riskLevel: "Critical Outbreak Condition"
+    },
+    curePlan: {
+      immediate: "Bag and incinerate heavily collapsed foliage immediately. Never add blighted matter to compost piles.",
+      organic: "Apply systemic Bacillus subtilis biological spray plus copper soap treatment at 7-day intervals.",
+      targeted: "Spray systemic translaminar fungicide (Cymoxanil + Mancozeb) covering both top and bottom leaf blades.",
+      soil: "Hill soil deeply over potato tubers to prevent downward spore runoff into developing potatoes."
+    }
+  },
+  {
+    id: "sample-grape",
+    crop: "Grape",
+    condition: "Healthy Foliage",
+    scientific: "No pathogen detected",
+    severity: "Routine Care",
+    severityType: "healthy",
+    badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    symptomSummary: "Crisp vein integrity, uniform chlorophyll pigmentation, and resilient margins with zero parasitic lesions.",
+    cureLine: "Maintain canopy aeration and schedule regular preventative leaf surface monitoring.",
+    futureAlert: {
+      title: "Favorable Growing Conditions",
+      text: "Canopy aeration and leaf surface moisture levels are currently optimal. No fungal pathogen risks detected.",
+      riskLevel: "Low Risk — Maintain Monitoring"
+    },
+    curePlan: {
+      immediate: "Maintain current canopy airflow and continue standard shoot positioning.",
+      organic: "Apply compost tea foliar spray monthly to stimulate beneficial phyllosphere microbes.",
+      targeted: "No chemical fungicides required. Preserve natural leaf beneficial biome.",
+      soil: "Ensure balanced nitrogen-potassium levels to prevent tender overgrowth susceptible to powdery mildew."
+    }
+  }
+];
+
+/* ---------- Interactive Diagnostic Leaf Hotspots ---------- */
+const LEAF_HOTSPOTS = [
+  {
+    id: "margin",
+    x: "28%",
+    y: "32%",
+    title: "Leaf Margin",
+    note: "Necrotic edge tissue indicates fungal lesion advancement or localized moisture stress."
+  },
+  {
+    id: "vein",
+    x: "54%",
+    y: "50%",
+    title: "Vein Architecture",
+    note: "Main vascular channels show clear sap transport with no signs of systemic bacterial clogging."
+  },
+  {
+    id: "spot",
+    x: "72%",
+    y: "40%",
+    title: "Surface Spotting",
+    note: "Early concentric ring formation typical of fungal spore colonization following dew exposure."
+  }
+];
+
+/* ---------- Diagnosis Seed Data & Diagnosis Dictionary ---------- */
 const DIAG = {
-  Tomato:{ disease:"Early Blight", scientific:"Alternaria solani", confidence:92, urgency:"Moderate Action", contagious:false, summary:"Concentric lesions with yellowing margins, concentrated on older foliage." },
-  Potato:{ disease:"Late Blight", scientific:"Phytophthora infestans", confidence:96, urgency:"Immediate Action Needed", contagious:true, summary:"Water-soaked lesions spreading rapidly in cool, wet conditions." },
-  Corn:{ disease:"Northern Leaf Blight", scientific:"Exserohilum turcicum", confidence:88, urgency:"Moderate Action", contagious:false, summary:"Long cigar-shaped lesions running parallel to leaf veins." },
-  Apple:{ disease:"Apple Scab", scientific:"Venturia inaequalis", confidence:89, urgency:"Moderate Action", contagious:false, summary:"Olive-green to black velvety spots on leaves and developing fruit." },
-  Grape:{ disease:"Healthy", scientific:"No pathogen detected", confidence:98, urgency:"Monitor Only", contagious:false, summary:"Vein structure is clear, margins are intact, and no lesion geometry was found." },
-  Rice:{ disease:"Bacterial Leaf Blight", scientific:"Xanthomonas oryzae", confidence:91, urgency:"Immediate Action Needed", contagious:true, summary:"Yellow-white striping advancing from leaf tips with wavy margins." },
-  Wheat:{ disease:"Leaf Rust", scientific:"Puccinia triticina", confidence:87, urgency:"Moderate Action", contagious:false, summary:"Small orange-brown pustules distributed across the leaf blade." },
-  Pepper:{ disease:"Bacterial Spot", scientific:"Xanthomonas campestris", confidence:90, urgency:"Moderate Action", contagious:false, summary:"Raised, water-soaked spots with chlorotic halos on leaves." },
+  Tomato: {
+    disease: "Early Blight",
+    scientific: "Alternaria solani",
+    urgency: "Moderate Action",
+    contagious: false,
+    summary: "Concentric circular lesions with prominent yellow margins, predominantly concentrated on older mature foliage.",
+    futureAlert: "Warm temperatures (24–29°C) combined with high humidity will accelerate spore generation upward to healthy fruits.",
+    cure: {
+      pesticide: "Apply chlorothalonil or copper-based protectant fungicide every 7–10 days during warm humid weather.",
+      organic: "Mix cold-pressed neem oil (5 ml/L) with mild horticultural soap. Apply at dawn or dusk.",
+      pruning: "Prune all bottom leaves within 25 cm of the soil. Sanitize shears between cuts.",
+      watering: "Water strictly at the soil base. Install drip irrigation to avoid leaf moisture."
+    }
+  },
+  Potato: {
+    disease: "Late Blight",
+    scientific: "Phytophthora infestans",
+    urgency: "Immediate Action Needed",
+    contagious: true,
+    summary: "Water-soaked dark lesions spreading rapidly across foliage with white mildew on leaf undersides in damp weather.",
+    futureAlert: "Critical epidemic risk: Airborne sporangia can spread across entire plots within 48 hours under cool wet spells.",
+    cure: {
+      pesticide: "Apply translaminar or systemic fungicide (Metalaxyl or Cymoxanil combined with Mancozeb) without delay.",
+      organic: "Spray copper sulfate or Bacillus subtilis solution immediately after detecting initial water-soaked blotches.",
+      pruning: "Cut and carefully bag heavily blighted vines. Destroy all infected tissue; do not compost.",
+      watering: "Cease overhead sprinkling. Allow soil surface to dry thoroughly before careful furrow watering."
+    }
+  },
+  Corn: {
+    disease: "Northern Leaf Blight",
+    scientific: "Exserohilum turcicum",
+    urgency: "Moderate Action",
+    contagious: false,
+    summary: "Long elliptical cigar-shaped lesions running parallel along leaf veins, turning tan with grayish spore centers.",
+    futureAlert: "Secondary infections will lower photosynthetic capacity during the silking stage if rainy periods persist.",
+    cure: {
+      pesticide: "Apply strobilurin or triazole fungicides if lesions appear on the ear leaf before tassel emergence.",
+      organic: "Use resistant crop varieties and spray bio-fungicide formulations containing Trichoderma harzianum.",
+      pruning: "Remove heavily infected lower leaf blades after pollination to boost airflow.",
+      watering: "Ensure adequate plot drainage and practice a 2-year crop rotation with non-host legumes."
+    }
+  },
+  Apple: {
+    disease: "Apple Scab",
+    scientific: "Venturia inaequalis",
+    urgency: "Moderate Action",
+    contagious: false,
+    summary: "Olive-green to dark velvety circular spots on leaf surfaces and young fruit, causing early leaf drop.",
+    futureAlert: "Ascospores release during springtime rainfalls; unprotected leaves risk high infection within 9 hours of wetness.",
+    cure: {
+      pesticide: "Apply captan, mancozeb, or myclobutanil beginning at tight cluster stage through petal fall.",
+      organic: "Spray sulfur or liquid lime-sulfur early in the morning before anticipated wet periods.",
+      pruning: "Prune the tree canopy to an open vase or central leader structure to speed up leaf drying.",
+      watering: "Rake and compost or shred fallen leaf litter in autumn to deplete overwintering fungus reserves."
+    }
+  },
+  Grape: {
+    disease: "Healthy Canopy",
+    scientific: "No pathogen detected",
+    urgency: "Routine Care",
+    contagious: false,
+    summary: "Vein structure is fully intact, chlorophyll pigmentation is even, and no fungal lesions were identified.",
+    futureAlert: "Current canopy airflow and humidity parameters are ideal. Continue preventive scouting twice weekly.",
+    cure: {
+      pesticide: "No chemical application required. Preserve beneficial insect and microbial populations.",
+      organic: "Apply dilute seaweed extract foliar spray every 14 days to enhance systemic plant vigor.",
+      pruning: "Perform canopy shoot positioning and selective leaf pulling around grape clusters for optimal sunlight.",
+      watering: "Maintain regulated deficit irrigation to stimulate root strength without inducing foliage stress."
+    }
+  },
+  Rice: {
+    disease: "Bacterial Leaf Blight",
+    scientific: "Xanthomonas oryzae",
+    urgency: "Immediate Action Needed",
+    contagious: true,
+    summary: "Yellow-white wavy lesions advancing downward from leaf tips, exuding milky bacterial beads in early mornings.",
+    futureAlert: "Heavy storm winds and irrigation runoff will easily transmit bacteria to neighboring paddy plots.",
+    cure: {
+      pesticide: "Apply copper bactericide or bronopol spray following high wind or flooding events.",
+      organic: "Drain field standing water for 3 days to lower humidity and apply bleaching powder at water inlets.",
+      pruning: "Clip diseased leaf tips only if practical; disinfect footwear and equipment between flooded paddies.",
+      watering: "Avoid excess nitrogen fertilizer which creates succulent, vulnerable leaf tissue."
+    }
+  },
+  Wheat: {
+    disease: "Leaf Rust",
+    scientific: "Puccinia triticina",
+    urgency: "Moderate Action",
+    contagious: false,
+    summary: "Small, round, orange-brown pustules randomly scattered across upper leaf blades containing powdery urediniospores.",
+    futureAlert: "Warm days (20–25°C) with persistent night dew trigger rapid rust spore cycles every 7–10 days.",
+    cure: {
+      pesticide: "Apply propiconazole or tebuconazole foliar spray when rust reaches the upper three leaves.",
+      organic: "Select rust-resistant certified cultivars and apply protective sulfur dust at boot stage.",
+      pruning: "Not applicable for broad-acre wheat; eliminate volunteer wheat seedlings between crop cycles.",
+      watering: "Manage soil potassium to strengthen cell walls against fungal penetration."
+    }
+  },
+  Pepper: {
+    disease: "Bacterial Spot",
+    scientific: "Xanthomonas campestris",
+    urgency: "Moderate Action",
+    contagious: false,
+    summary: "Raised, dark, water-soaked spots with distinct yellow chlorotic halos on foliage and blistered fruit patches.",
+    futureAlert: "Splashing rains in temperatures above 28°C will cause leaf defoliation, exposing fruit to sunscald.",
+    cure: {
+      pesticide: "Apply fixed copper bactericide mixed with mancozeb for improved bacterial suppression.",
+      organic: "Treat seeds with hot water prior to sowing and spray copper octanoate at transplanting.",
+      pruning: "Remove heavily spotted seedlings before field planting. Discard diseased fruit immediately.",
+      watering: "Install plastic mulch and avoid touching or working in pepper rows while leaves remain wet."
+    }
+  }
 };
+
 const SEED = [
-  { id:"demo-1", crop:"Tomato", field:"North Plot — A2", disease:"Early Blight", confidence:92, urgency:"Moderate Action", cure:"Chlorothalonil + pruning", date:"Nov 19, 2026", stage:"Flowering", source:"demo" },
-  { id:"demo-2", crop:"Potato", field:"East Field — B1", disease:"Late Blight", confidence:96, urgency:"Immediate Action Needed", cure:"Isolation + copper fungicide", date:"Nov 18, 2026", stage:"Vegetative", source:"demo" },
-  { id:"demo-3", crop:"Wheat", field:"West Field — C3", disease:"Leaf Rust", confidence:87, urgency:"Moderate Action", cure:"Propiconazole, Day 1 / 7", date:"Nov 16, 2026", stage:"Mature", source:"demo" },
-  { id:"demo-4", crop:"Grape", field:"Vine Row — D4", disease:"Healthy", confidence:98, urgency:"Monitor Only", cure:"Routine monitoring", date:"Nov 15, 2026", stage:"Flowering", source:"demo" },
-  { id:"demo-5", crop:"Rice", field:"Paddy — E2", disease:"Bacterial Leaf Blight", confidence:91, urgency:"Immediate Action Needed", cure:"Isolation + copper hydroxide", date:"Nov 13, 2026", stage:"Vegetative", source:"demo" },
-  { id:"demo-6", crop:"Tomato", field:"North Plot — A2", disease:"Early Blight", confidence:89, urgency:"Moderate Action", cure:"Organic neem + sanitation", date:"Nov 10, 2026", stage:"Flowering", source:"demo" },
+  { id: "demo-1", crop: "Tomato", field: "North Plot — A2", disease: "Early Blight", urgency: "Moderate Action", cure: "Copper spray + bottom pruning", date: "Nov 19, 2026", stage: "Flowering", source: "demo" },
+  { id: "demo-2", crop: "Potato", field: "East Field — B1", disease: "Late Blight", urgency: "Immediate Action Needed", cure: "Isolation + systemic fungicide", date: "Nov 18, 2026", stage: "Vegetative", source: "demo" },
+  { id: "demo-3", crop: "Wheat", field: "West Field — C3", disease: "Leaf Rust", urgency: "Moderate Action", cure: "Propiconazole treatment", date: "Nov 16, 2026", stage: "Mature", source: "demo" },
+  { id: "demo-4", crop: "Grape", field: "Vine Row — D4", disease: "Healthy Canopy", urgency: "Routine Care", cure: "Routine monitoring + shoot positioning", date: "Nov 15, 2026", stage: "Flowering", source: "demo" },
+  { id: "demo-5", crop: "Rice", field: "Paddy — E2", disease: "Bacterial Leaf Blight", urgency: "Immediate Action Needed", cure: "Paddy drainage + copper bactericide", date: "Nov 13, 2026", stage: "Vegetative", source: "demo" },
+  { id: "demo-6", crop: "Tomato", field: "North Plot — A2", disease: "Early Blight", urgency: "Moderate Action", cure: "Organic neem oil + sanitation", date: "Nov 10, 2026", stage: "Flowering", source: "demo" },
 ];
-const EXAMPLES = [
-  { disease:"Early Blight", crop:"Tomato", pct:92, urgency:"Moderate Action", tone:"#B45309", note:"Concentric lesions on lower leaves." },
-  { disease:"Late Blight", crop:"Potato", pct:96, urgency:"Immediate Action Needed", tone:"#B91C1C", note:"Rapid spread in wet, cool weather." },
-  { disease:"Healthy", crop:"Grape", pct:98, urgency:"Monitor Only", tone:"#047857", note:"No lesion geometry detected." },
-];
-const READOUTS = ["ANALYZING VEINS…","MAPPING LESIONS…","CLASSIFYING…","CHECKING GROWTH STAGE…"];
 
-/* ---------- Helpers ---------- */
-function urgencyColor(u){ return u==="Monitor Only" ? "#10B981" : u==="Moderate Action" ? "#F59E0B" : "#EF4444"; }
-function todayLabel(){ return new Date().toLocaleDateString("en-US",{ month:"short", day:"numeric", year:"numeric" }); }
+const READOUTS = ["Analyzing vein architecture…", "Mapping lesion boundaries…", "Evaluating pathogen risks…", "Synthesizing 4-part cure plan…"];
 
-export default function App(){
-  const { user: authUser, signInWithGoogle, signInWithGithub, logout, getIdToken, isConfigured: firebaseConfigured } = useAuth();
+function urgencyBadge(u) {
+  if (u === "Routine Care" || u === "Monitor Only" || u === "Healthy") {
+    return { bg: "bg-emerald-50 text-emerald-800 border-emerald-200", label: "Healthy / Routine Care", dot: "bg-emerald-500" };
+  }
+  if (u === "Moderate Action") {
+    return { bg: "bg-amber-50 text-amber-800 border-amber-200", label: "Moderate Action", dot: "bg-amber-500" };
+  }
+  return { bg: "bg-rose-50 text-rose-800 border-rose-200", label: "Immediate Action Needed", dot: "bg-rose-500" };
+}
 
-  const [view,setView] = useState("landing");
-  const [preloader,setPreloader] = useState(true);
-  const [exiting,setExiting] = useState(false);
-  const [progress,setProgress] = useState(0);
-  const [loginOpen,setLoginOpen] = useState(false);
-  const [previewMode,setPreviewMode] = useState(true);
-  const [user,setUser] = useState(null);
-  const [authNotice,setAuthNotice] = useState("");
-  const [demoEntries,setDemoEntries] = useState(SEED);
-  const [savedEntries,setSavedEntries] = useState([]);
-  const [apiStatus,setApiStatus] = useState("Checking backend…");
-  const [backendAvailable,setBackendAvailable] = useState(false);
+function todayLabel() {
+  return new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+export default function App() {
+  const { user: authUser, logout, getIdToken } = useAuth();
+
+  const [view, setView] = useState("landing");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [savedEntries, setSavedEntries] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  /* Interactive Showcase & Sample Preview States */
+  const [activeHotspot, setActiveHotspot] = useState(LEAF_HOTSPOTS[0]);
+  const [selectedSample, setSelectedSample] = useState(SAMPLE_LEAVES[0]);
 
   /* Diagnose state */
-  const [file,setFile] = useState(null);
-  const [preview,setPreview] = useState("");
-  const [crop,setCrop] = useState("");
-  const [field,setField] = useState("North Plot — A2");
-  const [stage,setStage] = useState("Flowering");
-  const [scanning,setScanning] = useState(false);
-  const [readout,setReadout] = useState(0);
-  const [result,setResult] = useState(null);
-  const [tab,setTab] = useState(0);
-  const [isolated,setIsolated] = useState(false);
-  const [saveMsg,setSaveMsg] = useState("");
-  const [busy,setBusy] = useState(false);
-  const [apiOpen,setApiOpen] = useState(false);
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [crop, setCrop] = useState("");
+  const [field, setField] = useState("North Plot — A2");
+  const [stage, setStage] = useState("Flowering");
+  const [scanning, setScanning] = useState(false);
+  const [readout, setReadout] = useState(0);
+  const [result, setResult] = useState(null);
+  const [tab, setTab] = useState(0);
+  const [isolated, setIsolated] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [apiOpen, setApiOpen] = useState(false);
   const fileRef = useRef(null);
   const cameraRef = useRef(null);
 
   /* History controls */
-  const [query,setQuery] = useState("");
-  const [cropFilter,setCropFilter] = useState("All");
-  const [urgencyFilter,setUrgencyFilter] = useState("All");
-  const [sort,setSort] = useState("Newest");
-  const [focusGroup,setFocusGroup] = useState("");
+  const [query, setQuery] = useState("");
+  const [cropFilter, setCropFilter] = useState("All");
+  const [urgencyFilter, setUrgencyFilter] = useState("All");
+  const [sort, setSort] = useState("Newest");
+  const [focusGroup, setFocusGroup] = useState("");
 
-  // ── Sync auth user ──
-  useEffect(() => {
-    if (authUser) {
-      setUser(authUser.displayName || authUser.email || "Authenticated User");
-    }
-  }, [authUser]);
-
-  // ── Wire token provider for API calls ──
+  // Wire token provider for API calls
   useEffect(() => {
     setTokenProvider(getIdToken);
   }, [getIdToken]);
 
-  // ── Check backend availability on mount ──
-  useEffect(() => {
-    api.checkBackend().then(available => {
-      setBackendAvailable(available);
-      if (available) {
-        setApiStatus("Backend connected — live mode.");
-        setPreviewMode(false);
-      } else {
-        setApiStatus("Local Preview Mode — demo data, no backend required.");
-      }
-    });
-  }, []);
-
-  // ── Load saved history from backend ──
+  // Load user's personal history from Cloud Firestore
   const reloadRecords = async () => {
-    if (!backendAvailable) return;
+    if (!authUser) {
+      setSavedEntries([]);
+      return;
+    }
+    setLoadingHistory(true);
     try {
-      const res = await api.getHistory();
-      if (res.success && res.data) {
-        const rows = res.data.map(r => ({
-          id: r.id || r._id,
-          crop: r.cropName,
-          field: r.fieldName,
-          disease: r.diseaseName,
-          confidence: typeof r.confidence === 'number' && r.confidence <= 1 ? Math.round(r.confidence * 100) : r.confidence,
-          urgency: r.urgency,
-          cure: r.cure ? (r.cure.pesticide || "Treatment plan").substring(0, 40) : "See cure plan",
-          date: new Date(r.createdAt).toLocaleDateString("en-US",{ month:"short", day:"numeric", year:"numeric" }),
-          stage: r.growthStage,
-          source: "saved"
-        }));
-        setSavedEntries(rows);
-        setApiStatus("Saved history loaded from backend.");
-      }
-    } catch(e) {
-      setApiStatus("Local Preview Mode — demo data, no backend required.");
+      const records = await getUserScans(authUser.uid);
+      setSavedEntries(records);
+    } catch (e) {
+      console.warn("Could not load scans from Firestore:", e);
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
-  useEffect(() => { if (backendAvailable) reloadRecords(); }, [backendAvailable]);
-
-  /* Preloader */
-  useEffect(()=>{
-    if(!preloader) return;
-    setExiting(false); setProgress(0);
-    const t = setInterval(()=> setProgress(p=> Math.min(100, p + 4 + Math.floor(Math.random()*4))), 120);
-    return ()=> clearInterval(t);
-  },[preloader]);
-  useEffect(()=>{
-    if(progress>=100 && preloader){
-      const t=setTimeout(()=>{ setExiting(true); setTimeout(()=> setPreloader(false), 520); }, 180);
-      return ()=> clearTimeout(t);
+  useEffect(() => {
+    if (authUser) {
+      reloadRecords();
+    } else {
+      setSavedEntries([]);
     }
-  },[progress,preloader]);
-  useEffect(()=>{
-    if(!scanning) return;
-    const t=setInterval(()=> setReadout(r=>(r+1)%READOUTS.length), 420);
-    return ()=> clearInterval(t);
-  },[scanning]);
+  }, [authUser]);
 
-  const allEntries = useMemo(()=> [...savedEntries, ...demoEntries], [savedEntries,demoEntries]);
-  const groups = useMemo(()=>{
+  useEffect(() => {
+    if (!scanning) return;
+    const t = setInterval(() => setReadout((r) => (r + 1) % READOUTS.length), 400);
+    return () => clearInterval(t);
+  }, [scanning]);
+
+  const allEntries = useMemo(() => {
+    if (savedEntries.length > 0) return savedEntries;
+    return authUser ? [] : SEED;
+  }, [savedEntries, authUser]);
+
+  const groups = useMemo(() => {
     const m = new Map();
-    allEntries.forEach(e=>{ const k=`${e.crop} in ${e.field}`; m.set(k, [...(m.get(k)||[]), e]); });
-    return [...m.entries()].filter(([,v])=> v.length>=2).sort((a,b)=> b[1].length-a[1].length);
-  },[allEntries]);
-  const topGroup = groups[0];
-  const filtered = useMemo(()=>{
-    let list = allEntries.filter(e=>{
-      const q=query.toLowerCase();
-      return (!q || (e.disease+" "+e.crop+" "+e.field).toLowerCase().includes(q)) && (cropFilter==="All"||e.crop===cropFilter) && (urgencyFilter==="All"||e.urgency===urgencyFilter) && (!focusGroup || `${e.crop} in ${e.field}`===focusGroup);
+    allEntries.forEach((e) => {
+      const k = `${e.crop} in ${e.field}`;
+      m.set(k, [...(m.get(k) || []), e]);
     });
-    list = [...list].sort((a,b)=> sort==="Confidence" ? b.confidence-a.confidence : 0);
+    return [...m.entries()].filter(([, v]) => v.length >= 2).sort((a, b) => b[1].length - a[1].length);
+  }, [allEntries]);
+  const topGroup = groups[0];
+
+  const filtered = useMemo(() => {
+    let list = allEntries.filter((e) => {
+      const q = query.toLowerCase();
+      return (
+        (!q || (e.disease + " " + e.crop + " " + e.field).toLowerCase().includes(q)) &&
+        (cropFilter === "All" || e.crop === cropFilter) &&
+        (urgencyFilter === "All" || e.urgency === urgencyFilter) &&
+        (!focusGroup || `${e.crop} in ${e.field}` === focusGroup)
+      );
+    });
     return list;
-  },[allEntries,query,cropFilter,urgencyFilter,sort,focusGroup]);
-  const healthyPct = allEntries.length ? Math.round(allEntries.filter(e=>e.urgency==="Monitor Only").length/allEntries.length*100) : 0;
+  }, [allEntries, query, cropFilter, urgencyFilter, sort, focusGroup]);
 
-  function go(v){ setView(v); window.scrollTo({top:0,behavior:"smooth"}); }
-  function handleFile(f){ if(!f) return; setFile(f); if(preview) URL.revokeObjectURL(preview); setPreview(URL.createObjectURL(f)); setResult(null); setSaveMsg(""); }
+  function go(v) {
+    setView(v);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-  function runDiagnosis(){
-    if(!file || !crop) return;
-    setScanning(true); setResult(null); setIsolated(false); setSaveMsg("");
+  function handleFile(f) {
+    if (!f) return;
+    setFile(f);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(f));
+    setResult(null);
+    setSaveMsg("");
+  }
 
-    if (backendAvailable) {
-      api.diagnose(file, crop, field.trim() || "Unnamed Plot", stage)
-        .then(res => {
-          setScanning(false);
-          if (res.success && res.data) {
-            const d = res.data;
-            setResult({
-              disease: d.diseaseName,
-              scientific: d.scientificName,
-              confidence: typeof d.confidence === 'number' && d.confidence <= 1 ? Math.round(d.confidence * 100) : d.confidence,
-              urgency: d.urgency === 'moderate' ? 'Moderate Action' : d.urgency === 'high' || d.urgency === 'Immediate Action' ? 'Immediate Action Needed' : d.urgency === 'low' || d.urgency === 'Monitor Only' ? 'Monitor Only' : d.urgency,
-              contagious: d.contagious || false,
-              summary: d.summary,
-              _cure: d.cure,
-              _backendId: d.id
-            });
-          } else {
-            // Fallback to demo
-            setResult(DIAG[crop]);
-          }
-          setTab(0);
-        })
-        .catch(() => {
-          setScanning(false);
+  function runDiagnosis() {
+    if (!file || !crop) return;
+    setScanning(true);
+    setResult(null);
+    setIsolated(false);
+    setSaveMsg("");
+
+    api
+      .diagnose(file, crop, field.trim() || "Unnamed Plot", stage)
+      .then((res) => {
+        setScanning(false);
+        if (res.success && res.data) {
+          const d = res.data;
+          setResult({
+            disease: d.diseaseName,
+            scientific: d.scientificName || DIAG[crop]?.scientific || "Identified Plant Pathogen",
+            urgency:
+              d.urgency === "moderate"
+                ? "Moderate Action"
+                : d.urgency === "high" || d.urgency === "Immediate Action"
+                ? "Immediate Action Needed"
+                : "Routine Care",
+            contagious: d.contagious || false,
+            summary: d.summary || DIAG[crop]?.summary,
+            futureAlert: DIAG[crop]?.futureAlert || "Scout surrounding rows twice weekly to intercept early spore migration.",
+            _cure: d.cure || DIAG[crop]?.cure,
+            _backendId: d.id
+          });
+        } else {
           setResult(DIAG[crop]);
-          setTab(0);
-        });
-    } else {
-      setTimeout(()=>{ setScanning(false); setResult(DIAG[crop]); setTab(0); }, 1800);
+        }
+        setTab(0);
+      })
+      .catch(() => {
+        setScanning(false);
+        setResult(DIAG[crop]);
+        setTab(0);
+      });
+  }
+
+  async function saveToHistory() {
+    if (!result || !crop) return;
+    if (!authUser) {
+      setAuthModalOpen(true);
+      return;
     }
-  }
+    setBusy(true);
+    setSaveMsg("");
 
-  async function saveToHistory(){
-    if(!result || !crop) return;
-    setBusy(true); setSaveMsg("");
-    const row = { id:`scan-${Date.now()}`, crop, field:field.trim()||"Unnamed Plot", disease:result.disease, confidence:result.confidence, urgency:result.urgency, cure: tab===0?"Chemical spray plan":tab===1?"Organic remedy plan":tab===2?"Pruning guide":"Watering & soil care", date:todayLabel(), stage, source:"saved" };
+    const scanData = {
+      id: `scan-${Date.now()}`,
+      userId: authUser.uid,
+      userEmail: authUser.email || "",
+      crop,
+      field: field.trim() || "Unnamed Plot",
+      disease: result.disease,
+      scientific: result.scientific || "",
+      urgency: result.urgency,
+      cure:
+        tab === 0
+          ? "Targeted chemical treatment"
+          : tab === 1
+          ? "Organic foliar treatment"
+          : tab === 2
+          ? "Canopy pruning & disposal"
+          : "Soil & moisture regulation",
+      futureAlert: result.futureAlert || "",
+      date: todayLabel(),
+      stage,
+      summary: result.summary || ""
+    };
 
-    if (result._backendId) {
-      // Already saved by /api/diagnose
-      setSaveMsg("Saved to history — scan stored.");
-      await reloadRecords();
-    } else {
-      // Local-only save
-      setSavedEntries(prev=>[row,...prev]);
-      setSaveMsg("Saved locally for this session.");
-    }
-    setBusy(false);
-  }
-
-  async function deleteEntry(e){
-    if(e.source==="saved" && backendAvailable){
-      setBusy(true);
-      try{ await api.deleteEntry(e.id); await reloadRecords(); }
-      catch(err){ setSaveMsg(err instanceof Error?err.message:"Could not delete that saved scan."); }
-      setBusy(false);
-    } else if(e.source==="saved") {
-      setSavedEntries(prev=> prev.filter(x=>x.id!==e.id));
-    } else {
-      setDemoEntries(prev=> prev.filter(x=>x.id!==e.id));
-    }
-  }
-
-  function downloadPlan(){
-    if(!result) return;
-    const text = `FOLIA — CURE PLAN\nCrop: ${crop} | Field: ${field} | Stage: ${stage}\nDiagnosis: ${result.disease} (${result.scientific})\nConfidence: ${result.confidence}% | Urgency: ${result.urgency}\n\nCHEMICAL: ${stage==="Seedling"?"HALF DOSE — 50% concentration":"Full dose approved"}; spray early morning.\nORGANIC: Neem oil 5 ml/L, weekly, plus sanitation.\nPRUNING: Remove affected leaves with disinfected shears; bag and dispose.\nWATER & SOIL: Water at soil level, improve drainage, avoid overhead watering.\nSCHEDULE: Day 1 — treat + prune. Day 3 — inspect. Day 7 — re-treat if lesions persist.\n`;
-    const url = URL.createObjectURL(new Blob([text],{type:"text/plain"}));
-    const a=document.createElement("a"); a.href=url; a.download=`folia-cure-plan-${crop.toLowerCase()}.txt`; a.click(); URL.revokeObjectURL(url);
-  }
-
-  async function signIn(provider){
-    setAuthNotice("");
     try {
-      if (provider === "Google") {
-        await signInWithGoogle();
-      } else {
-        await signInWithGithub();
-      }
-      setLoginOpen(false);
-    } catch(e) {
-      if (!firebaseConfigured) {
-        setAuthNotice("Connect Firebase keys to enable live auth — using Local Preview for now.");
-      } else {
-        setAuthNotice(e.message || "Authentication failed. Try again.");
-      }
-      setTimeout(()=>{ setUser("Demo Grower"); setLoginOpen(false); }, 350);
+      await saveUserScan(authUser.uid, scanData);
+      setSaveMsg("Diagnosis report saved securely to your private account.");
+      await reloadRecords();
+    } catch (err) {
+      console.error("Firestore save error:", err);
+      setSavedEntries((prev) => [scanData, ...prev]);
+      setSaveMsg("Saved locally to your session.");
+    } finally {
+      setBusy(false);
     }
+  }
+
+  async function deleteEntry(e) {
+    if (authUser && e.id) {
+      setBusy(true);
+      try {
+        await deleteUserScan(authUser.uid, e.id);
+        setSavedEntries((prev) => prev.filter((x) => x.id !== e.id));
+      } catch (err) {
+        console.error("Failed to delete from Firestore:", err);
+      } finally {
+        setBusy(false);
+      }
+    } else {
+      setSavedEntries((prev) => prev.filter((x) => x.id !== e.id));
+    }
+  }
+
+  function downloadPlan() {
+    if (!result) return;
+    const text = `FOLIA — CROP HEALTH & TREATMENT REPORT
+Crop: ${crop} | Field: ${field} | Growth Stage: ${stage}
+Condition: ${result.disease} (${result.scientific})
+Urgency Level: ${result.urgency}
+
+OUTBREAK WARNING:
+${result.futureAlert || "Maintain routine field scouting to prevent spore progression."}
+
+4-PART CURE PLAN:
+1. TARGETED ACTION: ${result._cure?.pesticide || "Apply recommended protective treatment."}
+2. ORGANIC ALTERNATIVE: ${result._cure?.organic || "Spray diluted neem solution (5ml/L)."}
+3. PRUNING & SANITATION: ${result._cure?.pruning || "Remove symptomatic leaves 2cm below lesions."}
+4. SOIL & MOISTURE: ${result._cure?.watering || "Water at base; avoid leaf surface wetness."}
+
+Report generated on ${todayLabel()} by Folia Plant Intelligence.
+`;
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `folia-treatment-plan-${crop.toLowerCase()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const tabs = [
-    { icon:FlaskConical, label:"Pesticide / Chemical Spray", title:"Targeted chemical control", body: result?._cure?.pesticide || "Apply a protectant fungicide to both leaf surfaces, with complete coverage on the underside where infection often begins. Treat in calm conditions and reapply after heavy rain. Rotate active ingredients across seasons to reduce resistance." },
-    { icon:Leaf, label:"Organic Remedies", title:"Low-impact treatment", body: result?._cure?.organic || "Mix neem oil at 5 ml per litre with a few drops of mild liquid soap. Spray in the early morning or late evening. Remove heavily infected leaves first so the remedy reaches healthy tissue." },
-    { icon:Scissors, label:"Pruning / Cutting Guide", title:"Remove the source of spread", body: result?._cure?.pruning || "Use clean, sharp shears. Cut 2 cm below visible lesions, disinfect the blade between cuts, and place all material in a sealed bag. Never compost infected foliage." },
-    { icon:Droplets, label:"Watering & Soil Care", title:"Change the conditions", body: result?._cure?.watering || "Water at soil level, preferably in the morning. Improve airflow, widen spacing, and add mulch to reduce soil splash. Avoid overhead watering until lesions stop expanding." },
+    {
+      icon: FlaskConical,
+      label: "Targeted Treatment",
+      title: "Protective & Curative Control",
+      body: result?._cure?.pesticide || "Apply a protectant fungicide to both leaf surfaces, with complete coverage on the underside where infection often begins. Treat in calm conditions and reapply after heavy rain."
+    },
+    {
+      icon: Leaf,
+      label: "Organic Remedy",
+      title: "Eco-Friendly Botanical Treatment",
+      body: result?._cure?.organic || "Mix cold-pressed neem oil at 5 ml per litre with a few drops of mild liquid soap. Spray in early morning or late evening. Remove heavily infected foliage first so the remedy reaches healthy tissue."
+    },
+    {
+      icon: Scissors,
+      label: "Pruning & Sanitation",
+      title: "Halt Physical Disease Vectors",
+      body: result?._cure?.pruning || "Use clean, sharp shears. Cut 2 cm below visible lesions, disinfect blades between cuts with rubbing alcohol, and seal infected trimmings in bags. Never compost infected plant matter."
+    },
+    {
+      icon: Droplets,
+      label: "Soil & Moisture Care",
+      title: "Modify Micro-Climate Conditions",
+      body: result?._cure?.watering || "Water strictly at soil level in early morning. Improve canopy spacing and add organic straw mulch to stop fungal spores from splashing up from bare soil."
+    }
   ];
 
   return (
-    <div data-safe-area-inset-root style={{boxSizing:"border-box", paddingTop:"var(--safe-area-inset-top)", minHeight:"100vh", background:"var(--bg)", overflowX:"clip"}}>
-      {/* PRELOADER */}
-      {preloader && (
-        <div className="fixed inset-0 z-[90] flex flex-col bg-[#0A0A0A] overflow-y-auto pt-[max(1rem,var(--safe-area-inset-top))] pb-6 transition-all duration-500" style={{ opacity: exiting?0:1, transform: exiting?"translateY(-100%)":"none" }} aria-label="Loading Folia">
-          <div className="flex-1 flex flex-col items-center justify-center px-6 min-h-[420px]">
-            <div className="w-full max-w-[720px] h-[150px] relative flex items-center justify-center overflow-hidden">
-              <img src={loaderUrl} alt="Folia leaf loading" className="animate-glide h-[92px] w-auto object-contain" />
-            </div>
-            <p className="mono text-[11px] tracking-[.25em] text-[#FAFAFA] mt-8 text-center">FOLIA — PLANT INTELLIGENCE</p>
-          </div>
-          <div className="px-5 sm:px-10 max-w-6xl w-full mx-auto">
-            <div className="flex justify-between mono text-[11px] text-[#FAFAFA]"><span>LOADING</span><span>{String(progress).padStart(2,"0")}% → 100%</span></div>
-            <div className="h-[1px] bg-white/25 mt-3 overflow-hidden"><div className="h-full bg-[#FAFAFA] transition-all duration-100" style={{width:`${progress}%`}} /></div>
-          </div>
-        </div>
-      )}
-
-      {/* NAV */}
-      <header data-safe-area-sticky-top className="sticky z-40 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#E5E5E5]" style={{top:"var(--safe-area-inset-top)"}}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[64px] flex items-center justify-between gap-3">
-          <button onClick={()=>go("landing")} className="flex items-center gap-3 min-w-0" aria-label="Folia home">
-            <span className="w-9 h-9 bg-white rounded-[8px] p-[5px] shrink-0 block overflow-hidden border border-[#E5E5E5]"><img src={monogramUrl} alt="Folia monogram" className="w-full h-full object-contain" /></span>
-            <span className="font-display font-bold tracking-[.18em] text-lg text-[#0A0A0A]">FOLIA</span>
+    <div
+      data-safe-area-inset-root
+      style={{
+        boxSizing: "border-box",
+        paddingTop: "var(--safe-area-inset-top)",
+        minHeight: "100vh",
+        background: "var(--bg)",
+        overflowX: "clip"
+      }}
+    >
+      {/* TOP NAVIGATION BAR */}
+      <header
+        data-safe-area-sticky-top
+        className="sticky z-40 bg-white/95 backdrop-blur-md border-b border-slate-200"
+        style={{ top: "var(--safe-area-inset-top)" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[68px] flex items-center justify-between gap-4">
+          {/* Logo */}
+          <button onClick={() => go("landing")} className="flex items-center gap-2.5 min-w-0 group" aria-label="Folia home">
+            <svg
+              className="w-8 h-8 transition-transform group-hover:scale-105"
+              viewBox="0 0 36 36"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="foliaLeafGrad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#14532D" />
+                  <stop offset="0.5" stopColor="#16A34A" />
+                  <stop offset="1" stopColor="#4ADE80" />
+                </linearGradient>
+                <linearGradient id="foliaAccentGrad" x1="10" y1="6" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#22C55E" stopOpacity="0.8" />
+                  <stop offset="1" stopColor="#14532D" stopOpacity="0.9" />
+                </linearGradient>
+              </defs>
+              {/* Primary Botanical Leaf Contour */}
+              <path
+                d="M18 34C18 34 5 28 4 15C3 3 17 2 17 2C17 2 31 3 32 15C33 28 18 34 18 34Z"
+                fill="url(#foliaLeafGrad)"
+              />
+              {/* Overlapping Secondary Leaf Wing */}
+              <path
+                d="M18 5C22 10 27 15 26 23C25 30 18 33 18 33C18 33 22 26 21 19C20 12 18 5 18 5Z"
+                fill="url(#foliaAccentGrad)"
+                opacity="0.9"
+              />
+              {/* Central Vein Line */}
+              <path
+                d="M18 4V31"
+                stroke="#FFFFFF"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                opacity="0.85"
+              />
+              {/* Branching Lateral Veins */}
+              <path
+                d="M18 12L23 9M18 17L24 14M18 22L23 20M18 13L13 10M18 18L12 15M18 23L13 21"
+                stroke="#FFFFFF"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                opacity="0.65"
+              />
+            </svg>
+            <span className="font-display font-bold text-2xl text-slate-900 tracking-tight leading-none">
+              Folia
+            </span>
           </button>
-          <nav className="hidden md:flex items-center gap-7 mono text-[11px] tracking-[.14em] text-[#6B6B6B]">
-            <button className={view==="landing"?"text-[#0A0A0A]":"hover:text-[#0A0A0A]"} onClick={()=>go("landing")}>OVERVIEW</button>
-            <button className={view==="diagnose"?"text-[#0A0A0A]":"hover:text-[#0A0A0A]"} onClick={()=>go("diagnose")}>DIAGNOSE</button>
-            <button className={view==="history"?"text-[#0A0A0A]":"hover:text-[#0A0A0A]"} onClick={()=>go("history")}>HISTORY</button>
-            <button className={view==="monograph"?"text-[#0A0A0A]":"hover:text-[#0A0A0A]"} onClick={()=>go("monograph")}>MONOGRAPH</button>
+
+          {/* Desktop Nav Links (Clean Title Case, 14-15px medium) */}
+          <nav className="hidden md:flex items-center gap-8 text-[15px] font-medium text-slate-600">
+            <button
+              className={`transition-colors py-1 ${view === "landing" ? "text-[#14532D] font-semibold border-b-2 border-[#14532D]" : "hover:text-slate-900"}`}
+              onClick={() => go("landing")}
+            >
+              Overview
+            </button>
+            <button
+              className={`transition-colors py-1 ${view === "diagnose" ? "text-[#14532D] font-semibold border-b-2 border-[#14532D]" : "hover:text-slate-900"}`}
+              onClick={() => go("diagnose")}
+            >
+              Diagnose
+            </button>
+            <button
+              className={`transition-colors py-1 ${view === "history" ? "text-[#14532D] font-semibold border-b-2 border-[#14532D]" : "hover:text-slate-900"}`}
+              onClick={() => go("history")}
+            >
+              History
+            </button>
           </nav>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className={`hidden lg:inline-flex items-center gap-2 mono text-[10px] border border-[#E5E5E5] bg-[#F5F5F5] px-2.5 py-1.5 rounded-full ${backendAvailable ? 'text-[#047857]' : 'text-[#6B6B6B]'}`}><span className={`w-1.5 h-1.5 rounded-full ${backendAvailable ? 'bg-[#10B981]' : 'bg-[#F59E0B]'} animate-pulse`} />{backendAvailable ? 'LIVE MODE' : 'LOCAL PREVIEW'}</span>
-            {user ? <span className="hidden sm:block mono text-[11px] px-3 py-2 border border-[#E5E5E5] rounded-full text-[#0A0A0A]">{user.toUpperCase()}</span> : <button onClick={()=>setLoginOpen(true)} className="bg-[#0A0A0A] text-white text-sm font-semibold px-3 sm:px-4 py-2 rounded-full">Sign In / Open App</button>}
+
+          {/* User Account / Auth Actions */}
+          <div className="flex items-center gap-3">
+            {authUser ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 border border-slate-200 bg-slate-50 px-3.5 py-1.5 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <UserIcon size={14} className="text-[#14532D]" />
+                  <span className="text-xs font-semibold text-slate-800 max-w-[130px] truncate">
+                    {authUser.displayName || authUser.email?.split("@")[0] || "Farmer"}
+                  </span>
+                </div>
+                <button
+                  onClick={logout}
+                  title="Sign out"
+                  className="p-2 border border-slate-200 rounded-full text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition flex items-center justify-center"
+                  aria-label="Sign out"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="bg-[#14532D] hover:bg-[#166534] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition shadow-sm hover:shadow"
+              >
+                Sign In / Register
+              </button>
+            )}
           </div>
         </div>
-        <div className="md:hidden flex gap-5 px-4 pb-3 mono text-[10px] tracking-widest text-[#6B6B6B] overflow-x-auto no-scrollbar">
-          <button onClick={()=>go("landing")}>OVERVIEW</button><button onClick={()=>go("diagnose")}>DIAGNOSE</button><button onClick={()=>go("history")}>HISTORY</button><button onClick={()=>go("monograph")}>MONOGRAPH</button>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden flex gap-6 px-4 pb-3 text-sm font-medium text-slate-600 overflow-x-auto no-scrollbar border-t border-slate-100 pt-2">
+          <button className={view === "landing" ? "text-[#14532D] font-bold" : ""} onClick={() => go("landing")}>Overview</button>
+          <button className={view === "diagnose" ? "text-[#14532D] font-bold" : ""} onClick={() => go("diagnose")}>Diagnose</button>
+          <button className={view === "history" ? "text-[#14532D] font-bold" : ""} onClick={() => go("history")}>History</button>
         </div>
       </header>
 
-      <main className="pb-10">
-        {view==="landing" && (
+      <main className="pb-16">
+        {view === "landing" && (
           <>
-            {/* HERO */}
+            {/* HERO SECTION (Above the Fold) */}
             <section className="bg-white overflow-hidden">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full pt-12 sm:pt-16 pb-10 sm:pb-14 grid items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-14 sm:pb-16 grid lg:grid-cols-[1.1fr_0.9fr] items-center gap-10">
+                {/* Left Column: Heading, Subtitle & Immediate CTAs */}
                 <div className="min-w-0">
-                <p className="label !text-[#0A0A0A]">AI-POWERED PLANT DISEASE DETECTION</p>
-                <h1 className="font-display font-bold leading-[.92] tracking-[-0.03em] mt-5 text-[clamp(3.2rem,9vw,7.5rem)] text-[#0A0A0A]">Read the leaf.<br /><span className="text-[#6B6B6B]">Save the crop.</span></h1>
-                <p className="max-w-[560px] text-[#333333] text-base sm:text-lg leading-relaxed mt-6">Photograph a leaf, get a measured diagnosis, and follow a four-part cure plan built for the crop, field, and growth stage in front of you.</p>
-                <div className="flex flex-wrap gap-3 mt-8">
-                  <button onClick={()=>go("diagnose")} className="bg-[#0A0A0A] text-white font-semibold px-6 py-3.5 rounded-full flex items-center gap-2">Start Diagnosis <ArrowRight size={17} /></button>
-                  <button onClick={()=>go("history")} className="border border-[#0A0A0A] bg-white text-[#0A0A0A] px-6 py-3.5 rounded-full font-semibold">View History</button>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 border-t border-[#0A0A0A]/20 mt-12 sm:mt-16 pt-5 gap-5 mono">
-                  {[["94.2%","AVG CONFIDENCE"],["8","CROPS"],["<3S","SCAN"],["4-STEP","CURE"]].map(([v,l])=> <div key={l}><div className="text-2xl sm:text-3xl text-[#0A0A0A]">{v}</div><div className="text-[10px] tracking-[.18em] text-[#6B6B6B] mt-1">{l}</div></div>)}
-                </div>
-                </div>
-                <div className="min-w-0 flex items-center justify-center lg:justify-end">
-                  <img src={heroLeafUrl} alt="Bright vivid green leaf with glowing rim light on a white background" className="w-full max-w-[560px] h-auto object-contain" />
-                </div>
-              </div>
-            </section>
+                  <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-[#14532D] px-3 py-1 rounded-full text-xs font-semibold mb-5">
+                    <Sprout size={14} className="text-emerald-600" />
+                    <span>Instant AI Leaf Health Analysis</span>
+                  </div>
 
-            {/* WORKFLOW */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
-              <div className="flex items-end justify-between gap-4"><div><p className="label">WORKFLOW</p><h2 className="font-display text-3xl sm:text-5xl font-semibold mt-3 text-[#0A0A0A]">Four steps. One clear decision.</h2></div><span className="mono hidden sm:block text-xs text-[#6B6B6B]">01 — 04</span></div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] bg-white mt-9 divide-y sm:divide-y-0 lg:divide-x divide-[#E5E5E5]">
-                {[{n:"01",icon:Upload,t:"Upload",d:"Add a sharp photo of the affected leaf."},{n:"02",icon:ScanLine,t:"AI Scan",d:"Veins, lesions, and growth stage are mapped."},{n:"03",icon:Sprout,t:"Cure Plan",d:"Chemical, organic, pruning, and soil steps."},{n:"04",icon:History,t:"History",d:"Every scan is saved by crop and field."}].map((s)=> <div key={s.n} className="p-6 sm:p-7"><div className="flex justify-between"><span className="mono text-xs text-[#6B6B6B]">{s.n}</span><s.icon size={22} className={s.icon===Sprout?"text-[#16A34A]":"text-[#0A0A0A]"} /></div><h3 className="font-display text-xl font-semibold mt-12 text-[#0A0A0A]">{s.t}</h3><p className="text-sm text-[#6B6B6B] leading-relaxed mt-2">{s.d}</p></div>)}
-              </div>
-            </section>
+                  {/* Balanced 2-line heading at clamp(2.5rem, 4.2vw, 3.5rem) */}
+                  <h1 className="font-display font-bold leading-[1.05] tracking-tight text-slate-900 text-[clamp(2.5rem,4.2vw,3.5rem)]">
+                    Read the leaf.<br />
+                    <span className="text-[#14532D]">Save the crop.</span>
+                  </h1>
 
-            {/* MONOGRAPH */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 grid lg:grid-cols-2 gap-8 lg:gap-14 items-start">
-              <div className="bg-[#FFFFFF] border border-[#E5E5E5] p-4 sm:p-6">
-                <img src={monographUrl} alt="Botanical monograph line art of tomato and wheat" className="w-full h-auto object-contain bg-white opacity-100" />
-                <p className="mono text-[10px] tracking-[.18em] text-[#0A0A0A]/70 mt-4">PLATE 01 — SOLANUM LYCOPERSICUM / TRITICUM</p>
-              </div>
-              <div className="lg:pt-5">
-                <p className="label">FIELD MONOGRAPH</p><h2 className="font-display text-4xl sm:text-6xl font-semibold mt-4 leading-[.95] text-[#0A0A0A]">Botany,<br />measured.</h2>
-                <p className="text-[#6B6B6B] leading-relaxed mt-6">Folia reads a leaf the way a field botanist would: first its structure, then the geometry of what has changed. The model is trained to separate normal vein architecture from the edge, colour, and texture of disease.</p>
-                <div className="space-y-4 mt-7">{["Vein mapping — structure is checked before symptoms are named.","Lesion geometry — shape, margin, and distribution are measured.","Growth-stage context — dosage and risk change with the plant."].map((x,i)=> <div key={x} className="flex gap-4 border-b border-[#E5E5E5] pb-4"><span className="mono text-xs text-[#6B6B6B]">0{i+1}</span><p className="text-sm sm:text-base leading-relaxed text-[#0A0A0A]">{x}</p></div>)}</div>
-                <button onClick={()=>go("diagnose")} className="mt-7 inline-flex items-center gap-2 font-semibold border-b border-[#0A0A0A] pb-1 text-[#0A0A0A]">Test a leaf in the scanner <ArrowUpRight size={17} /></button>
-              </div>
-            </section>
+                  <p className="max-w-[540px] text-slate-600 text-base sm:text-lg leading-relaxed mt-4">
+                    Photograph any diseased crop leaf to identify pathogens instantly, review localized outbreak warnings, and follow a 4-part treatment plan before infections spread.
+                  </p>
 
-            {/* PREVIEW */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
-              <p className="label">DIAGNOSTIC PREVIEW</p><h2 className="font-display text-3xl sm:text-5xl font-semibold mt-3 text-[#0A0A0A]">What the scan can find.</h2>
-              <div className="grid md:grid-cols-3 gap-4 mt-8">{EXAMPLES.map(e=> <article key={e.disease} className="hairline bg-[#FFFFFF] p-6"><div className="flex justify-between"><span className="mono text-[10px] tracking-widest text-[#6B6B6B]">{e.crop.toUpperCase()}</span><span className="w-2.5 h-2.5 rounded-full mt-1" style={{background:e.tone}} /></div><h3 className="font-display text-2xl font-semibold mt-10 text-[#0A0A0A]">{e.disease}</h3><p className="text-sm text-[#6B6B6B] mt-2 leading-relaxed">{e.note}</p><div className="flex justify-between items-end mt-8"><span className="mono text-3xl text-[#0A0A0A]">{e.pct}%</span><span className="text-xs font-medium" style={{color:e.tone}}>{e.urgency}</span></div></article>)}</div>
+                  {/* CTAs directly below the subtitle */}
+                  <div className="flex flex-wrap items-center gap-3.5 mt-7">
+                    <button
+                      onClick={() => go("diagnose")}
+                      className="bg-[#14532D] hover:bg-[#166534] text-white font-semibold text-base px-7 py-3.5 rounded-full flex items-center gap-2.5 shadow-md hover:shadow-lg transition-all"
+                    >
+                      <span>Start Diagnosis</span>
+                      <ArrowRight size={18} />
+                    </button>
+                    <button
+                      onClick={() => go("history")}
+                      className="border border-slate-300 hover:border-slate-800 bg-white text-slate-800 hover:bg-slate-50 font-semibold text-base px-6 py-3.5 rounded-full transition"
+                    >
+                      View History
+                    </button>
+                  </div>
+
+                  {/* Quick Value Points */}
+                  <div className="flex flex-wrap items-center gap-6 mt-8 text-xs font-medium text-slate-500 pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="text-emerald-600" />
+                      <span>Zero hardware required</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="text-emerald-600" />
+                      <span>Immediate 4-part cure plans</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="text-emerald-600" />
+                      <span>Early outbreak alerts</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Moving 3D Leaf */}
+                <div className="relative">
+                  <LeafStage3D />
+                </div>
+              </div>
             </section>
           </>
         )}
 
-        {view==="monograph" && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 grid lg:grid-cols-2 gap-8 items-start animate-fade">
-            <div className="bg-[#FFFFFF] border border-[#E5E5E5] p-4 sm:p-6"><img src={monographUrl} alt="Botanical monograph line art of tomato and wheat" className="w-full h-auto object-contain opacity-100" /><p className="mono text-[10px] tracking-[.18em] text-[#0A0A0A]/70 mt-4">PLATE 01 — SOLANUM LYCOPERSICUM / TRITICUM</p></div>
-            <div><p className="label">MONOGRAPH — FIELD NOTES</p><h1 className="font-display text-4xl sm:text-6xl font-semibold mt-4 text-[#0A0A0A]">Botany, measured.</h1><p className="text-[#6B6B6B] leading-relaxed mt-6">A good diagnosis starts before the disease. The monograph records the healthy leaf first, so change can be compared against structure rather than memory.</p><div className="grid sm:grid-cols-2 gap-4 mt-8">{[["Vein mapping","Primary and secondary veins are traced."],["Lesion geometry","Margins, size, and spread are measured."],["Growth-stage context","Seedling care differs from mature care."],["Field memory","Scans are grouped by crop and plot."]].map(([t,d])=> <div key={t} className="hairline bg-white p-5"><h3 className="font-display text-lg text-[#0A0A0A]">{t}</h3><p className="text-sm text-[#6B6B6B] mt-2 leading-relaxed">{d}</p></div>)}</div></div>
-          </section>
-        )}
-
-        {view==="diagnose" && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-fade">
-            <div className="flex flex-wrap justify-between gap-4 items-end"><div><p className="label">DIAGNOSE</p><h1 className="font-display text-4xl sm:text-6xl font-semibold mt-3 text-[#0A0A0A]">AI Leaf Scanner</h1><p className="text-[#6B6B6B] mt-3 max-w-xl">Add a leaf photo, confirm the crop and growth stage, then run the scan.</p></div><span className="mono text-[11px] text-[#6B6B6B]">{apiStatus}</span></div>
-
-            <div className="grid lg:grid-cols-[1fr_1.15fr] gap-5 mt-8 items-start">
-              {/* LEFT */}
-              <div className="space-y-5">
-                <div className="hairline bg-[#FFFFFF] p-4 sm:p-5">
-                  <div className="flex justify-between items-center"><p className="label">LEAF PHOTO</p><span className="mono text-[10px] text-[#6B6B6B]">JPG / PNG</span></div>
-                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e=>handleFile(e.target.files?.[0]||null)} />
-                  <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e=>handleFile(e.target.files?.[0]||null)} />
-                  {!preview ? (
-                    <button onClick={()=>fileRef.current?.click()} className="w-full mt-4 border border-dashed border-[#D9D9D9] bg-white min-h-[260px] flex flex-col items-center justify-center gap-3 px-4 text-center hover:border-[#0A0A0A] transition"><Upload size={28} className="text-[#0A0A0A]" /><span className="font-display text-lg text-[#0A0A0A]">Drop a leaf photo, or browse</span><span className="text-sm text-[#6B6B6B]">Sharp, daylight photos give the clearest scan.</span></button>
-                  ) : (
-                    <div className="relative mt-4 overflow-hidden border border-[#E5E5E5] bg-white">
-                      <img src={preview} alt="Selected leaf preview" className="w-full h-[280px] sm:h-[320px] object-cover" />
-                      {scanning && <><div className="absolute inset-0 opacity-20" style={{backgroundImage:"linear-gradient(rgba(0,0,0,.25) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.25) 1px, transparent 1px)", backgroundSize:"28px 28px"}} /><div className="animate-scan absolute left-0 right-0 h-[2px] bg-[#10B981] shadow-[0_0_18px_#10B981]" /></>}
-                      <button onClick={()=>{setPreview(""); setFile(null); setResult(null);}} className="absolute top-3 right-3 bg-white/90 text-[#0A0A0A] p-2 rounded-full border border-[#E5E5E5]" aria-label="Remove photo"><X size={16} /></button>
-                      {scanning && <div className="absolute bottom-3 left-3 bg-white/90 px-3 py-2 mono text-[10px] tracking-widest text-[#047857] border border-[#E5E5E5]">{READOUTS[readout]}</div>}
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <button onClick={()=>fileRef.current?.click()} className="border border-[#0A0A0A] bg-white text-[#0A0A0A] px-4 py-2.5 rounded-full text-sm font-medium">Browse files</button>
-                    <button onClick={()=>cameraRef.current?.click()} className="border border-[#0A0A0A] bg-white text-[#0A0A0A] px-4 py-2.5 rounded-full text-sm font-medium inline-flex items-center gap-2"><Camera size={16} /> Use Camera</button>
-                    {preview && <button onClick={()=>fileRef.current?.click()} className="px-4 py-2.5 text-sm text-[#6B6B6B]">Replace photo</button>}
-                  </div>
+        {/* PROTECTED PAGE: DIAGNOSE */}
+        {view === "diagnose" && (
+          <ProtectedRoute onOpenLogin={() => setAuthModalOpen(true)} fallbackTitle="Leaf Scanner">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14 animate-fade">
+              {/* Refined Header */}
+              <div className="max-w-3xl mb-10">
+                <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-[#14532D] px-3.5 py-1.5 rounded-full text-xs font-semibold mb-3">
+                  <Sprout size={15} className="text-emerald-600" />
+                  <span>Crop Health & Pathology Analysis</span>
                 </div>
-
-                <div className="hairline bg-[#FFFFFF] p-4 sm:p-5 space-y-5">
-                  <div><label className="label" htmlFor="crop">Crop Name</label><select id="crop" value={crop} onChange={e=>setCrop(e.target.value)} className="mt-2 w-full bg-white text-[#0A0A0A] border border-[#D9D9D9] px-3 py-3 text-sm"><option value="">Select a crop</option>{CROPS.map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div><label className="label" htmlFor="field">Field / Plot Name</label><input id="field" value={field} onChange={e=>setField(e.target.value)} placeholder="e.g. North Plot — A2" className="mt-2 w-full bg-white text-[#0A0A0A] border border-[#D9D9D9] px-3 py-3 text-sm [overflow-wrap:anywhere]" /></div>
-                  <div><span className="label">Crop Age / Growth Stage</span><div className="flex flex-wrap gap-2 mt-2">{STAGES.map(s=> <button key={s} onClick={()=>setStage(s)} className={`px-3.5 py-2 rounded-full text-sm border ${stage===s?"bg-[#0A0A0A] text-white border-[#0A0A0A]":"bg-white text-[#0A0A0A] border-[#D9D9D9]"}`}>{s}</button>)}</div></div>
-                  <button disabled={!file || !crop || scanning} onClick={runDiagnosis} className="w-full bg-[#0A0A0A] text-white font-semibold py-3.5 rounded-full disabled:opacity-35 disabled:cursor-not-allowed flex items-center justify-center gap-2">{scanning?"Scanning…":"Run AI Diagnosis"} <ScanLine size={17} /></button>
-                  {(!file || !crop) && <p className="text-xs text-[#6B6B6B]">Add a leaf photo and choose a crop to enable the scan.</p>}
-                </div>
-
-                <div className="hairline bg-white">
-                  <button onClick={()=>setApiOpen(v=>!v)} className="w-full flex justify-between items-center p-4 text-left text-[#0A0A0A]"><span className="mono text-[11px] tracking-widest">DEVELOPER — API LAYER</span><ChevronDown size={17} className={apiOpen?"rotate-180":""} /></button>
-                  {apiOpen && <div className="px-4 pb-4 mono text-[11px] leading-6 text-[#6B6B6B]"><p>BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'</p><p>POST /api/diagnose</p><p>GET /api/history</p><p>GET /api/analytics/recurring</p><p>DELETE /api/history/:id</p><p className="text-[#0A0A0A] mt-2">The app falls back to local demo mode when the backend is unreachable.</p></div>}
-                </div>
+                <h1 className="font-display text-3xl sm:text-5xl font-bold text-slate-900 leading-tight">
+                  Leaf Pathology Scanner
+                </h1>
+                <p className="text-slate-600 text-sm sm:text-base mt-3 leading-relaxed">
+                  Upload or capture a sharp photo of any symptomatic crop leaf. Folia analyzes pathogen signs, evaluates environmental spread risks, and synthesizes a structured 4-part treatment strategy.
+                </p>
               </div>
 
-              {/* RIGHT */}
-              <div>
-                {!result && !scanning ? (
-                  <div className="hairline bg-[#FFFFFF] min-h-[520px] flex flex-col items-center justify-center text-center px-6 py-16"><Leaf className="text-[#16A34A]" size={34} /><h2 className="font-display text-2xl sm:text-3xl mt-5 text-[#0A0A0A]">Your diagnosis will appear here.</h2><p className="text-[#6B6B6B] max-w-sm mt-3 leading-relaxed">Select a crop, add a photo, and run the scan. The cure plan is built for that crop and growth stage.</p></div>
-                ) : scanning ? (
-                  <div className="hairline bg-[#FFFFFF] min-h-[520px] flex flex-col items-center justify-center px-6"><div className="w-12 h-12 border border-[#E5E5E5] border-t-[#0A0A0A] rounded-full animate-spin" /><p className="mono text-xs tracking-[.2em] mt-6 text-[#047857]">{READOUTS[readout]}</p><p className="text-[#6B6B6B] text-sm mt-3">Hold the leaf steady. The scan usually finishes in under three seconds.</p></div>
-                ) : result && (
-                  <div className="space-y-5 animate-fade">
-                    {result.contagious && <div className="bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] p-4 sm:p-5"><div className="flex gap-3"><ShieldAlert className="shrink-0" /><div><p className="font-display font-bold tracking-wide text-[#0A0A0A]">URGENT SPREAD ALERT — Isolate this plant now</p><ol className="text-sm mt-3 space-y-1.5 list-decimal list-inside text-[#333333]"><li>Isolate plant</li><li>Do not water overhead</li><li>Disinfect tools</li><li>Remove infected leaves in a sealed bag</li></ol><label className="flex items-center gap-2 mt-4 text-sm font-medium cursor-pointer text-[#0A0A0A]"><input type="checkbox" checked={isolated} onChange={e=>setIsolated(e.target.checked)} className="w-4 h-4 accent-[#0A0A0A]" /> I have isolated the plant</label>{isolated && <p className="text-sm mt-2 flex gap-1.5 text-[#065F46]"><CheckCircle2 size={16} /> Isolation confirmed. Continue with the cure plan.</p>}</div></div></div>}
-                    <div className="hairline bg-[#FFFFFF] p-5 sm:p-6">
-                      <div className="flex flex-wrap justify-between gap-3"><div><p className="label">{crop} — {field}</p><h2 className="font-display text-3xl sm:text-4xl font-semibold mt-2 text-[#0A0A0A]">{result.disease}</h2><p className="italic text-[#6B6B6B] mt-1">{result.scientific}</p></div><span className="h-fit px-3 py-1.5 rounded-full text-xs font-semibold text-[#0A0A0A]" style={{background: result.urgency==="Monitor Only" ? "#ECFDF5" : result.urgency==="Moderate Action" ? "#FFFBEB" : "#FEF2F2", border:"1px solid #E5E5E5"}}>{result.urgency}</span></div>
-                      <p className="text-sm text-[#333333] leading-relaxed mt-4">{result.summary}</p>
-                      <div className="mt-6"><div className="flex justify-between mono text-xs text-[#0A0A0A]"><span>CONFIDENCE</span><span className="text-xl">{result.confidence}%</span></div><div className="h-1.5 bg-[#E5E5E5] mt-2"><div className="h-full bg-[#0A0A0A] transition-all duration-700" style={{width:`${result.confidence}%`}} /></div></div>
-                      <p className="mono text-[11px] text-[#6B6B6B] mt-4">STAGE: {stage.toUpperCase()} · FIELD: {field.toUpperCase()}</p>
+              {/* Redesigned 2-Column Workspace */}
+              <div className="grid lg:grid-cols-[1.05fr_1.25fr] gap-8 items-start">
+                {/* Left Column: Interactive Upload & Crop Specs Card */}
+                <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                  {/* Step 1: Upload Box */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-[#14532D] text-white flex items-center justify-center text-[10px]">1</span>
+                        <span>Foliage Sample Photo</span>
+                      </span>
+                      <span className="text-[11px] font-medium text-slate-400">JPG, PNG (Daylight photo)</span>
                     </div>
 
-                    <div className="hairline bg-[#FFFFFF]">
-                      <div className="flex overflow-x-auto no-scrollbar border-b border-[#E5E5E5]">{tabs.map((t,i)=> <button key={t.label} onClick={()=>setTab(i)} className={`whitespace-nowrap px-4 py-3.5 text-sm ${tab===i?"bg-[#0A0A0A] text-white font-semibold":"bg-white text-[#6B6B6B]"}`}>{t.label}</button>)}</div>
-                      <div className="p-5 sm:p-6"><div className="flex gap-3 items-center"><span className={`w-9 h-9 border border-[#E5E5E5] flex items-center justify-center ${tabs[tab].icon===Leaf?"text-[#16A34A]":"text-[#0A0A0A]"}`}>{React.createElement(tabs[tab].icon,{size:18})}</span><h3 className="font-display text-xl font-semibold text-[#0A0A0A]">{tabs[tab].title}</h3></div><p className="text-sm sm:text-base text-[#333333] leading-relaxed mt-4">{tabs[tab].body}</p>
-                        {tab===0 && <div className={`mt-5 p-4 border ${stage==="Seedling"?"border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]":"border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]"}`}><p className="font-semibold text-sm flex gap-2"><AlertTriangle size={17} /> {stage==="Seedling"?"HALF DOSE — Seedling: use 50% concentration, spray early morning, avoid direct sun":"Full dose approved"}</p><p className="text-sm text-[#333333] mt-2">{stage==="Seedling"?"Young tissue is sensitive to chemical burn. Test one leaf first, then wait 24 hours.":"Mature foliage can tolerate the labelled rate. Keep spray off open flowers where possible."}</p></div>}
-                        {tab===1 && <p className="text-sm mt-4 text-[#6B6B6B]">Dosage: neem oil 5 ml/L · Frequency: every 7 days · Safety: avoid spraying in direct sun.</p>}
-                        <div className="mt-6"><p className="label">TREATMENT SCHEDULE</p><div className="grid grid-cols-3 border border-[#E5E5E5] mt-3 text-sm">{["DAY 1","DAY 3","DAY 7"].map(d=> <div key={d} className="p-3 border-r last:border-r-0 border-[#E5E5E5]"><p className="mono text-[10px] text-[#6B6B6B]">{d}</p><p className="mt-2 text-xs sm:text-sm leading-snug text-[#0A0A0A]">{d==="DAY 1"?"Treat + prune":d==="DAY 3"?"Inspect spread":"Re-treat if needed"}</p></div>)}</div></div>
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0] || null)} />
+                    <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFile(e.target.files?.[0] || null)} />
+
+                    {!preview ? (
+                      <div
+                        onClick={() => fileRef.current?.click()}
+                        className="group border-2 border-dashed border-slate-200 hover:border-[#14532D] bg-slate-50/70 hover:bg-emerald-50/30 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200"
+                      >
+                        <div className="w-14 h-14 rounded-2xl bg-white group-hover:bg-[#14532D] text-[#14532D] group-hover:text-white flex items-center justify-center shadow-sm transition-colors mb-3">
+                          <Upload size={24} />
+                        </div>
+                        <h4 className="font-display text-base font-bold text-slate-800 group-hover:text-[#14532D] transition-colors">
+                          Click to select a leaf image, or drop it here
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-1.5 max-w-xs leading-relaxed">
+                          Center the affected leaf surface with good natural lighting for highest diagnostic precision.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 aspect-[4/3] flex items-center justify-center shadow-inner">
+                        <img src={preview} alt="Selected crop leaf sample" className="w-full h-full object-cover" />
+                        
+                        {scanning && (
+                          <div className="absolute inset-0 pointer-events-none">
+                            <div className="animate-scan absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_16px_#34D399]" />
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => {
+                            setPreview("");
+                            setFile(null);
+                            setResult(null);
+                          }}
+                          className="absolute top-3 right-3 bg-white/90 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition"
+                          title="Remove image"
+                        >
+                          <X size={16} />
+                        </button>
+
+                        {scanning && (
+                          <div className="absolute bottom-3 left-3 bg-slate-900/90 text-emerald-400 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-emerald-800/80 backdrop-blur-sm">
+                            {READOUTS[readout]}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Auxiliary Image Buttons */}
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        type="button"
+                        onClick={() => fileRef.current?.click()}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-4 py-2 rounded-xl transition"
+                      >
+                        Choose File
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => cameraRef.current?.click()}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 transition"
+                      >
+                        <Camera size={14} />
+                        <span>Take Photo</span>
+                      </button>
+                      {preview && (
+                        <button
+                          type="button"
+                          onClick={() => fileRef.current?.click()}
+                          className="text-xs text-slate-500 hover:text-slate-800 ml-auto underline"
+                        >
+                          Replace image
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step 2: Field & Plant Metadata */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#14532D] text-white flex items-center justify-center text-[10px]">2</span>
+                      <span>Crop Parameters</span>
+                    </span>
+
+                    <div className="grid sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="crop">
+                          Crop Specie
+                        </label>
+                        <select
+                          id="crop"
+                          value={crop}
+                          onChange={(e) => setCrop(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-[#14532D] transition"
+                        >
+                          <option value="">Select crop…</option>
+                          {CROPS.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="field">
+                          Field / Plot Label
+                        </label>
+                        <input
+                          id="field"
+                          value={field}
+                          onChange={(e) => setField(e.target.value)}
+                          placeholder="e.g. Plot B — Row 3"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-[#14532D] transition"
+                        />
                       </div>
                     </div>
 
-                    {saveMsg && <div className="border border-[#A7F3D0] bg-[#ECFDF5] text-sm p-3 flex gap-2 text-[#065F46]"><CheckCircle2 size={17} className="text-[#047857] shrink-0" /><span>{saveMsg}</span></div>}
-                    <div className="flex flex-wrap gap-2">
-                      <button disabled={busy} onClick={saveToHistory} className="bg-[#0A0A0A] text-white font-semibold px-5 py-3 rounded-full disabled:opacity-50">{busy?"Saving…":"Save to History"}</button>
-                      <button onClick={downloadPlan} className="border border-[#0A0A0A] bg-white text-[#0A0A0A] px-5 py-3 rounded-full font-medium inline-flex gap-2 items-center"><Download size={16} /> Download Cure Plan</button>
-                      <button onClick={()=>{setResult(null); setPreview(""); setFile(null); setCrop("");}} className="px-4 py-3 text-sm text-[#6B6B6B] inline-flex gap-2 items-center"><RotateCcw size={15} /> Scan Another Leaf</button>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-2">
+                        Growth Stage
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {STAGES.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setStage(s)}
+                            className={`py-2 px-3 rounded-xl text-xs font-semibold transition border ${
+                              stage === s
+                                ? "bg-[#14532D] text-white border-[#14532D] shadow-sm"
+                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Main Action Button */}
+                    <button
+                      disabled={!file || !crop || scanning}
+                      onClick={runDiagnosis}
+                      className="w-full mt-2 bg-[#14532D] hover:bg-[#166534] text-white font-bold py-3.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition shadow-md hover:shadow-lg"
+                    >
+                      {scanning ? (
+                        <span>Analyzing Leaf Morphology…</span>
+                      ) : (
+                        <>
+                          <span>Run Complete Diagnosis</span>
+                          <ScanLine size={18} />
+                        </>
+                      )}
+                    </button>
+                    {(!file || !crop) && (
+                      <p className="text-xs text-slate-400 text-center">
+                        Attach a leaf photograph and choose a crop to run the diagnosis.
+                      </p>
+                    )}
                   </div>
-                )}
+                </div>
+
+                {/* Right Column: Clean Diagnosis Results & Treatment Blueprint */}
+                <div className="space-y-6">
+                  {!result && !scanning ? (
+                    <div className="bg-white border border-slate-200/90 rounded-3xl min-h-[500px] flex flex-col items-center justify-center text-center p-8 sm:p-12 shadow-sm">
+                      <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#14532D] flex items-center justify-center mb-4">
+                        <Leaf size={32} />
+                      </div>
+                      <h3 className="font-display text-2xl font-bold text-slate-800">
+                        Ready to Diagnose
+                      </h3>
+                      <p className="text-slate-500 text-sm max-w-sm mt-2 leading-relaxed">
+                        Attach a leaf sample and click <strong className="text-slate-700">Run Complete Diagnosis</strong>. Results will synthesize disease classification, environmental outbreak risks, and an immediate 4-step treatment plan.
+                      </p>
+                    </div>
+                  ) : scanning ? (
+                    <div className="bg-white border border-slate-200/90 rounded-3xl min-h-[500px] flex flex-col items-center justify-center p-8 sm:p-12 text-center shadow-sm">
+                      <div className="w-12 h-12 border-3 border-slate-200 border-t-[#14532D] rounded-full animate-spin mb-4" />
+                      <h4 className="font-display text-xl font-bold text-slate-900">{READOUTS[readout]}</h4>
+                      <p className="text-xs text-slate-500 mt-2 max-w-xs">
+                        Isolating leaf margins, calculating lesion concentricity, and matching pathogen vectors…
+                      </p>
+                    </div>
+                  ) : (
+                    result && (
+                      <div className="space-y-5 animate-fade">
+                        {/* Outbreak Spread Warning Banner */}
+                        <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-5 shadow-sm">
+                          <div className="flex items-start gap-3">
+                            <Flame className="text-amber-700 shrink-0 mt-0.5" size={20} />
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                  Outbreak Spread Advisory
+                                </h4>
+                                <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+                                  Active Risk
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-700 mt-1.5 leading-relaxed">
+                                {result.futureAlert || "Warm, humid conditions accelerate fungal spore generation. Keep surrounding rows under strict 48-hour inspection."}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Contagious Alert */}
+                        {result.contagious && (
+                          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 text-rose-950 shadow-sm">
+                            <div className="flex gap-3">
+                              <ShieldAlert className="shrink-0 text-rose-600 mt-0.5" size={20} />
+                              <div>
+                                <h4 className="font-bold text-sm text-slate-900">
+                                  High Pathogen Transmissibility — Isolate Immediately
+                                </h4>
+                                <p className="text-xs text-slate-700 mt-1 leading-relaxed">
+                                  This pathogen spreads quickly through rain splash and equipment. Remove and bag symptomatic tissue, and halt overhead irrigation.
+                                </p>
+                                <label className="flex items-center gap-2 mt-3 text-xs font-semibold cursor-pointer text-slate-800">
+                                  <input
+                                    type="checkbox"
+                                    checked={isolated}
+                                    onChange={(e) => setIsolated(e.target.checked)}
+                                    className="w-4 h-4 accent-[#14532D] rounded"
+                                  />
+                                  <span>I have marked and isolated this affected plot</span>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Diagnosis Overview Card */}
+                        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-sm">
+                          <div className="flex flex-wrap justify-between items-start gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-[#14532D] uppercase tracking-wider block">
+                                {crop} • {field}
+                              </span>
+                              <h2 className="font-display text-3xl font-bold text-slate-900 mt-1">
+                                {result.disease}
+                              </h2>
+                              <p className="text-xs text-slate-500 italic mt-0.5">{result.scientific}</p>
+                            </div>
+                            <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${urgencyBadge(result.urgency).bg}`}>
+                              {urgencyBadge(result.urgency).label}
+                            </span>
+                          </div>
+
+                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed mt-4">
+                            {result.summary}
+                          </p>
+
+                          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                            <span>Stage: <strong className="text-slate-800">{stage}</strong></span>
+                            <span>Plot: <strong className="text-slate-800">{field}</strong></span>
+                          </div>
+                        </div>
+
+                        {/* 4-Part Cure Plan Card */}
+                        <div className="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm">
+                          <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 bg-slate-50/70">
+                            {tabs.map((t, i) => (
+                              <button
+                                key={t.label}
+                                onClick={() => setTab(i)}
+                                className={`whitespace-nowrap px-4 py-3.5 text-xs font-semibold transition border-b-2 ${
+                                  tab === i
+                                    ? "bg-white text-[#14532D] border-[#14532D]"
+                                    : "text-slate-600 border-transparent hover:text-slate-900"
+                                }`}
+                              >
+                                {t.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="p-6">
+                            <div className="flex items-center gap-2.5 mb-2">
+                              {React.createElement(tabs[tab].icon, { size: 18, className: "text-[#14532D]" })}
+                              <h4 className="font-display text-lg font-bold text-slate-900">
+                                {tabs[tab].title}
+                              </h4>
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed mt-2">
+                              {tabs[tab].body}
+                            </p>
+
+                            <div className="mt-5 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
+                              <span className="font-bold text-slate-800 block mb-1">Recommended Schedule:</span>
+                              Day 1: Pruning & initial application • Day 3: Monitor lesion margins • Day 7: Secondary protective spray if symptoms persist.
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Save Confirmation */}
+                        {saveMsg && (
+                          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-medium text-emerald-900 flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                            <span>{saveMsg}</span>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            disabled={busy}
+                            onClick={saveToHistory}
+                            className="bg-[#14532D] hover:bg-[#166534] text-white font-semibold text-xs sm:text-sm px-6 py-3 rounded-full shadow-sm hover:shadow transition disabled:opacity-50"
+                          >
+                            {busy ? "Saving to Account…" : "Save to History"}
+                          </button>
+                          <button
+                            onClick={downloadPlan}
+                            className="border border-slate-300 hover:border-slate-800 bg-white text-slate-800 text-xs sm:text-sm font-semibold px-5 py-3 rounded-full inline-flex items-center gap-2 transition"
+                          >
+                            <Download size={15} />
+                            <span>Download Plan</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setResult(null);
+                              setPreview("");
+                              setFile(null);
+                              setCrop("");
+                            }}
+                            className="px-4 py-3 text-xs font-medium text-slate-500 hover:text-slate-800 inline-flex items-center gap-1.5 transition"
+                          >
+                            <RotateCcw size={14} />
+                            <span>Scan Another Leaf</span>
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </ProtectedRoute>
         )}
 
-        {view==="history" && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-fade">
-            <p className="label">TREATMENT HISTORY</p><h1 className="font-display text-4xl sm:text-6xl font-semibold mt-3 text-[#0A0A0A]">Every scan, in context.</h1>
-            {topGroup && <div className="mt-7 bg-[#FFFBEB] border border-[#FDE68A] text-[#0A0A0A] p-4 sm:p-5 flex flex-wrap gap-4 items-center justify-between"><div className="flex gap-3"><AlertTriangle className="shrink-0 text-[#92400E]" /><p className="font-semibold">RECURRING ISSUE — {topGroup[0]} has {topGroup[1].length} detections in 14 days. Review soil + rotation.</p></div><button onClick={()=>setFocusGroup(topGroup[0])} className="bg-[#0A0A0A] text-white px-4 py-2.5 rounded-full text-sm">Filter to this group</button></div>}
-            {focusGroup && <button onClick={()=>setFocusGroup("")} className="mt-3 text-sm text-[#6B6B6B] underline">Clear group filter: {focusGroup}</button>}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-7">{[["TOTAL SCANS",allEntries.length],["HEALTHY %",`${healthyPct}%`],["IMMEDIATE ALERTS",allEntries.filter(e=>e.urgency==="Immediate Action Needed").length],["RECURRING GROUPS",groups.length]].map(([l,v])=> <div key={l} className="hairline bg-[#FFFFFF] p-4"><div className="mono text-2xl sm:text-3xl text-[#0A0A0A]">{v}</div><div className="label mt-2">{l}</div></div>)}</div>
-            <div className="flex flex-col lg:flex-row gap-3 mt-6">
-              <label className="flex-1 flex items-center gap-2 border border-[#E5E5E5] bg-[#FFFFFF] px-3"><Search size={17} className="text-[#6B6B6B]" /><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search disease, crop, or field" className="w-full bg-transparent py-3 outline-none text-sm text-[#0A0A0A] [overflow-wrap:anywhere]" /></label>
-              <select value={cropFilter} onChange={e=>setCropFilter(e.target.value)} className="bg-[#FFFFFF] text-[#0A0A0A] border border-[#E5E5E5] px-3 py-3 text-sm"><option>All</option>{CROPS.map(c=><option key={c}>{c}</option>)}</select>
-              <select value={urgencyFilter} onChange={e=>setUrgencyFilter(e.target.value)} className="bg-[#FFFFFF] text-[#0A0A0A] border border-[#E5E5E5] px-3 py-3 text-sm"><option>All</option><option>Monitor Only</option><option>Moderate Action</option><option>Immediate Action Needed</option></select>
-              <select value={sort} onChange={e=>setSort(e.target.value)} className="bg-[#FFFFFF] text-[#0A0A0A] border border-[#E5E5E5] px-3 py-3 text-sm"><option>Newest</option><option>Confidence</option></select>
-            </div>
-            <p className="mono text-[11px] text-[#6B6B6B] mt-5">{filtered.length} SCANS · {apiStatus}</p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-              {filtered.map(e=> <article key={e.id} className="hairline bg-[#FFFFFF] overflow-hidden"><div className="relative h-[170px] bg-[#F5F5F5]"><img src={preview && e.source==="saved" ? preview : heroUrl} alt={`${e.crop} leaf for ${e.disease}`} className="w-full h-full object-cover opacity-90" /><span className="absolute top-3 left-3 bg-white/90 text-[#0A0A0A] border border-[#E5E5E5] px-2 py-1 mono text-[10px]">{e.crop.toUpperCase()}</span><button onClick={()=>deleteEntry(e)} className="absolute top-3 right-3 bg-white/90 text-[#0A0A0A] border border-[#E5E5E5] p-2 rounded-full" aria-label={`Delete ${e.disease} scan`}><Trash2 size={15} /></button></div><div className="p-5"><div className="flex justify-between gap-3"><h3 className="font-display text-xl font-semibold leading-tight text-[#0A0A0A]">{e.disease}</h3><span className="mono text-lg text-[#0A0A0A]">{e.confidence}%</span></div><p className="text-sm text-[#6B6B6B] mt-2">{e.field} · {e.stage}</p><p className="text-sm mt-3 text-[#0A0A0A]">Cure applied: <span className="text-[#333333]">{e.cure}</span></p><div className="flex justify-between items-center mt-5"><span className="text-xs flex items-center gap-2 text-[#0A0A0A]"><span className="w-2 h-2 rounded-full" style={{background:urgencyColor(e.urgency)}} />{e.urgency}</span><span className="mono text-[11px] text-[#6B6B6B] flex items-center gap-1"><CalendarDays size={13} />{e.date}</span></div></div></article>)}
-            </div>
-            {filtered.length===0 && <div className="hairline bg-white p-10 text-center text-[#6B6B6B] mt-4">No scans match these filters. Try clearing the search or group filter.</div>}
-          </section>
+        {/* PROTECTED PAGE: HISTORY */}
+        {view === "history" && (
+          <ProtectedRoute onOpenLogin={() => setAuthModalOpen(true)} fallbackTitle="Diagnosis History">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 animate-fade">
+              <div className="flex flex-wrap justify-between items-end gap-4 pb-6 border-b border-slate-200">
+                <div>
+                  <span className="text-xs font-bold text-[#14532D] uppercase tracking-wider block mb-1">
+                    Treatment Archive
+                  </span>
+                  <h1 className="font-display text-3xl sm:text-5xl font-bold text-slate-900">
+                    Field Diagnosis Records
+                  </h1>
+                  <p className="text-slate-600 mt-2 text-sm">
+                    Logged in as <strong className="text-slate-900">{authUser?.email}</strong>. Every past scan is cataloged by plot and crop stage.
+                  </p>
+                </div>
+                <button
+                  onClick={reloadRecords}
+                  disabled={loadingHistory}
+                  className="text-xs font-semibold border border-slate-300 hover:border-slate-800 bg-white px-4 py-2 rounded-full transition shadow-sm"
+                >
+                  {loadingHistory ? "Refreshing Records…" : "Refresh Records"}
+                </button>
+              </div>
+
+              {/* Recurring Issue Notice */}
+              {topGroup && (
+                <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-wrap gap-4 items-center justify-between">
+                  <div className="flex gap-3 items-center">
+                    <AlertTriangle className="shrink-0 text-amber-600" size={20} />
+                    <p className="text-xs sm:text-sm text-slate-800 font-medium">
+                      <strong>Recurring Plot Issue:</strong> {topGroup[0]} has recorded {topGroup[1].length} positive detections. Consider crop rotation and soil solarization.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setFocusGroup(topGroup[0])}
+                    className="bg-[#14532D] hover:bg-[#166534] text-white px-4 py-2 rounded-full text-xs font-semibold transition"
+                  >
+                    Filter to this plot
+                  </button>
+                </div>
+              )}
+
+              {focusGroup && (
+                <button onClick={() => setFocusGroup("")} className="mt-3 text-xs text-slate-500 hover:text-slate-800 underline">
+                  Clear active plot filter: {focusGroup}
+                </button>
+              )}
+
+              {/* Search & Filter Bar */}
+              <div className="flex flex-col lg:flex-row gap-3 mt-6">
+                <label className="flex-1 flex items-center gap-2 border border-slate-200 bg-white rounded-xl px-3.5 shadow-sm">
+                  <Search size={16} className="text-slate-400" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search by crop, disease, or plot identifier…"
+                    className="w-full bg-transparent py-2.5 outline-none text-xs sm:text-sm text-slate-800"
+                  />
+                </label>
+                <select
+                  value={cropFilter}
+                  onChange={(e) => setCropFilter(e.target.value)}
+                  className="bg-white text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm shadow-sm"
+                >
+                  <option value="All">All Crops</option>
+                  {CROPS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <select
+                  value={urgencyFilter}
+                  onChange={(e) => setUrgencyFilter(e.target.value)}
+                  className="bg-white text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm shadow-sm"
+                >
+                  <option value="All">All Urgency Levels</option>
+                  <option value="Routine Care">Routine Care</option>
+                  <option value="Moderate Action">Moderate Action</option>
+                  <option value="Immediate Action Needed">Immediate Action Needed</option>
+                </select>
+              </div>
+
+              {/* Records List */}
+              {loadingHistory ? (
+                <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 mt-6 flex flex-col items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-slate-200 border-t-[#14532D] rounded-full animate-spin mb-3" />
+                  <span className="text-xs">Loading records…</span>
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+                  {filtered.map((e) => (
+                    <article key={e.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow transition">
+                      <div className="relative h-[160px] bg-slate-100">
+                        <img
+                          src={preview && e.source === "saved" ? preview : heroUrl}
+                          alt={`${e.crop} leaf condition`}
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute top-3 left-3 bg-white/95 text-slate-800 border border-slate-200 px-2.5 py-1 rounded-md text-[11px] font-bold">
+                          {e.crop}
+                        </span>
+                        <button
+                          onClick={() => deleteEntry(e)}
+                          className="absolute top-3 right-3 bg-white/95 text-slate-600 hover:text-rose-600 border border-slate-200 p-2 rounded-full transition shadow-sm"
+                          aria-label={`Delete record for ${e.disease}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      <div className="p-5">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-display text-xl font-bold text-slate-900 leading-tight">
+                            {e.disease}
+                          </h3>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">{e.field} • Stage: {e.stage}</p>
+                        <p className="text-xs text-slate-700 mt-3">
+                          <strong className="text-slate-900 font-semibold">Treatment:</strong> {e.cure}
+                        </p>
+                        <div className="flex justify-between items-center mt-5 pt-3 border-t border-slate-100">
+                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${urgencyBadge(e.urgency).bg}`}>
+                            {e.urgency}
+                          </span>
+                          <span className="text-xs text-slate-500 flex items-center gap-1">
+                            <CalendarDays size={13} />
+                            <span>{e.date}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+
+              {!loadingHistory && filtered.length === 0 && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 mt-6">
+                  <Leaf className="mx-auto text-emerald-600 mb-2" size={32} />
+                  <p className="font-display text-lg font-bold text-slate-800">No records found</p>
+                  <p className="text-xs mt-1">Start a scan in the leaf scanner to save your first diagnosis record.</p>
+                  <button
+                    onClick={() => go("diagnose")}
+                    className="mt-4 bg-[#14532D] text-white px-5 py-2.5 rounded-full text-xs font-semibold hover:bg-[#166534] transition"
+                  >
+                    Go to Scanner
+                  </button>
+                </div>
+              )}
+            </section>
+          </ProtectedRoute>
         )}
       </main>
 
-      <footer className="border-t border-[#E5E5E5] mt-4 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-col sm:flex-row justify-between gap-6">
-          <div className="flex items-center gap-3"><span className="w-9 h-9 bg-white rounded-[8px] p-[5px] block border border-[#E5E5E5]"><img src={monogramUrl} alt="Folia monogram" className="w-full h-full object-contain" /></span><div><p className="font-display font-bold tracking-[.18em] text-[#0A0A0A]">FOLIA</p><p className="text-xs text-[#6B6B6B]">Plant intelligence, kept simple.</p></div></div>
-          <nav className="mono text-[11px] text-[#6B6B6B] flex flex-wrap gap-5 items-center"><button onClick={()=>go("landing")}>OVERVIEW</button><button onClick={()=>go("diagnose")}>DIAGNOSE</button><button onClick={()=>go("history")}>HISTORY</button><button onClick={()=>setPreloader(true)}>REPLAY INTRO</button></nav>
-          <p className="mono text-[11px] text-[#6B6B6B]">© 2026 FOLIA · FIELD INTELLIGENCE</p>
+      {/* FOOTER */}
+      <footer className="border-t border-slate-200 bg-white py-6">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-xs font-medium text-slate-500">
+            © 2026 Folia
+          </p>
         </div>
       </footer>
 
-      {/* LOGIN MODAL */}
-      {loginOpen && (
-        <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/40 backdrop-blur-sm pt-[max(1rem,var(--safe-area-inset-top))] pb-8" role="dialog" aria-modal="true" aria-label="Sign in to Folia">
-          <div className="min-h-full flex items-center justify-center px-4">
-            <div className="w-full max-w-[440px] bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-8 relative animate-fade">
-              <button onClick={()=>setLoginOpen(false)} className="absolute top-4 right-4 p-1 text-[#6B6B6B]" aria-label="Close login"><X size={19} /></button>
-              <span className="w-12 h-12 bg-white rounded-[10px] p-2 block border border-[#E5E5E5]"><img src={monogramUrl} alt="Folia monogram" className="w-full h-full object-contain" /></span>
-              <h2 className="font-display text-3xl font-semibold mt-5 text-[#0A0A0A]">Welcome to Folia</h2><p className="text-[#6B6B6B] text-sm mt-2 leading-relaxed">Sign in to save scans, track fields, and return to every cure plan.</p>
-              <div className="space-y-3 mt-7">
-                <button onClick={()=>signIn("Google")} className="w-full bg-[#0A0A0A] text-white font-semibold py-3.5 rounded-full flex items-center justify-center gap-2"><Chrome size={18} /> Continue with Google</button>
-                <button onClick={()=>signIn("GitHub")} className="w-full border border-[#0A0A0A] bg-white text-[#0A0A0A] font-semibold py-3.5 rounded-full flex items-center justify-center gap-2"><Github size={18} /> Continue with GitHub</button>
-              </div>
-              {authNotice && <p className="text-sm mt-4 border border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] p-3">{authNotice}</p>}
-              <div className="flex items-center gap-3 my-6"><span className="h-px bg-[#E5E5E5] flex-1" /><span className="mono text-[10px] text-[#6B6B6B]">OR</span><span className="h-px bg-[#E5E5E5] flex-1" /></div>
-              <div className="flex items-center justify-between gap-3"><div><p className="font-semibold text-sm text-[#0A0A0A]">Local Preview Mode</p><p className="text-xs text-[#6B6B6B] mt-1">Demo data, no backend required.</p></div><button role="switch" aria-checked={previewMode} onClick={()=>setPreviewMode(v=>!v)} className={`w-12 h-6 rounded-full p-1 shrink-0 transition ${previewMode?"bg-[#0A0A0A]":"bg-[#D9D9D9]"}`}><span className={`block w-4 h-4 rounded-full bg-white ${previewMode?"ml-auto":""}`} /></button></div>
-              {previewMode && <p className="mono text-[10px] tracking-wider text-[#047857] mt-4">LOCAL PREVIEW MODE — DEMO DATA, NO BACKEND REQUIRED</p>}
-              <p className="mono text-[10px] leading-5 text-[#6B6B6B] mt-6 flex gap-1.5"><Lock size={12} className="shrink-0 mt-0.5" /> Firebase config: src/config/firebase.js — add VITE_FIREBASE_* keys to enable real auth.</p>
-              <button onClick={()=>{setUser("Demo Grower"); setLoginOpen(false);}} className="w-full mt-5 text-sm underline text-[#6B6B6B]">Continue as Demo Grower</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* FIREBASE AUTH MODAL (Google + Email/Password with Verification) */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 }
